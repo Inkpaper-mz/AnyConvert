@@ -35,6 +35,12 @@
 
 输入支持 FFmpeg 能解码的一切：MP4、MKV、MOV、AVI、WMV、FLV、WebM、TS、M2TS、MPG、VOB、3GP、OGV、RMVB、ASF、MXF、M4A、FLAC、WAV、APE、WV、AIFF、OPUS、AMR 等。
 
+## 下载
+
+- 最新版本：<https://github.com/Inkpaper-mz/AnyConvert/releases/latest>
+- 1.0.0 直链（Apple 芯片）：[AnyConvert-1.0.0-macOS-arm64.dmg](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.0.0/AnyConvert-1.0.0-macOS-arm64.dmg)
+- Intel Mac：按下方「自行构建」使用 `ARCHS="arm64 x86_64"` 生成通用版本
+
 ## 安装
 
 1. 打开 `dist/`，把 **万能转码.app** 拖到「应用程序」文件夹；
