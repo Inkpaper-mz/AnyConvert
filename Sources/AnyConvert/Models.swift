@@ -6,6 +6,7 @@ enum MediaKind: String, Codable {
     case video
     case audio
     case image
+    case document
 }
 
 struct OutputFormat: Identifiable, Hashable {
@@ -64,7 +65,19 @@ enum Catalog {
         .init(id: "ico",  title: "ICO",  subtitleKey: "fmt.ico.sub",  ext: "ico",  kind: .image, lossless: true),
     ]
 
-    static let all: [OutputFormat] = videoFormats + audioFormats + imageFormats
+    static let documentFormats: [OutputFormat] = [
+        .init(id: "pdf",  title: "PDF",  subtitleKey: "fmt.pdf.sub",  ext: "pdf",  kind: .document, lossless: true),
+        .init(id: "docx", title: "DOCX", subtitleKey: "fmt.docx.sub", ext: "docx", kind: .document, lossless: true),
+        .init(id: "odt",  title: "ODT",  subtitleKey: "fmt.odt.sub",  ext: "odt",  kind: .document, lossless: true),
+        .init(id: "rtf",  title: "RTF",  subtitleKey: "fmt.rtf.sub",  ext: "rtf",  kind: .document, lossless: true),
+        .init(id: "txt",  title: "TXT",  subtitleKey: "fmt.txt.sub",  ext: "txt",  kind: .document, lossless: true),
+        .init(id: "html", title: "HTML", subtitleKey: "fmt.html.sub", ext: "html", kind: .document, lossless: true),
+        .init(id: "xlsx", title: "XLSX", subtitleKey: "fmt.xlsx.sub", ext: "xlsx", kind: .document, lossless: true),
+        .init(id: "csv",  title: "CSV",  subtitleKey: "fmt.csv.sub",  ext: "csv",  kind: .document, lossless: true),
+        .init(id: "pptx", title: "PPTX", subtitleKey: "fmt.pptx.sub", ext: "pptx", kind: .document, lossless: true),
+    ]
+
+    static let all: [OutputFormat] = videoFormats + audioFormats + imageFormats + documentFormats
 
     static func format(_ id: String) -> OutputFormat {
         all.first { $0.id == id } ?? videoFormats[0]
@@ -75,6 +88,7 @@ enum Catalog {
         case .video: return videoFormats
         case .audio: return audioFormats
         case .image: return imageFormats
+        case .document: return documentFormats
         }
     }
 }

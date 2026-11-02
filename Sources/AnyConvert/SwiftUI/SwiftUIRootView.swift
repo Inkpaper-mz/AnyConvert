@@ -85,11 +85,17 @@ struct SwiftUIRootView: View {
                                 Text(format.menuLabel).tag(format.id)
                             }
                         }
+                        Section(L10n.t("group.document")) {
+                            ForEach(Catalog.documentFormats) { format in
+                                Text(format.menuLabel).tag(format.id)
+                            }
+                        }
                     }
                     .labelsHidden()
                     .pickerStyle(.menu)
                 }
 
+                if model.currentFormat.kind != .document {
                 section(L10n.t("settings.quality")) {
                     Picker("", selection: bind({ model.quality }, { model.setQuality($0) })) {
                         ForEach(Quality.allCases) { Text($0.title).tag($0) }
@@ -139,6 +145,7 @@ struct SwiftUIRootView: View {
                         .font(.system(size: 10)).foregroundColor(.secondary)
                 }
 
+                if model.currentFormat.kind == .image || model.currentFormat.kind == .video {
                 section(L10n.t("settings.compression")) {
                     Toggle(L10n.t("settings.targetSize"),
                            isOn: bind({ model.targetSizeMB != nil },
@@ -160,6 +167,9 @@ struct SwiftUIRootView: View {
                     Text(L10n.t("settings.targetSizeHint"))
                         .font(.system(size: 10)).foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
+                }
+
+                }
                 }
 
                 section(L10n.t("settings.output")) {

@@ -53,6 +53,8 @@ def find_ffmpeg() -> str:
         os.environ.get("FFMPEG"),
         shutil.which("ffmpeg"),
         os.path.join(_REPO_ROOT, "vendor", "ffmpeg"),
+        os.path.join(_REPO_ROOT, "vendor", "ffmpeg.exe"),
+        os.path.join(_REPO_ROOT, "vendor", "win", "ffmpeg.exe"),
         os.path.join(_REPO_ROOT, "vendor", "intel", "ffmpeg"),
         os.path.join(_REPO_ROOT, "dist", "万能转码.app", "Contents", "Resources", "bin", "ffmpeg-arm64"),
         "/opt/homebrew/bin/ffmpeg",

@@ -310,6 +310,11 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> int:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:  # noqa: BLE001
+            pass
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=0)
     parser.add_argument("--no-browser", action="store_true")

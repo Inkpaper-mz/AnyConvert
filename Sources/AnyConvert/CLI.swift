@@ -272,6 +272,7 @@ enum CLI {
                 case .audio: return info.hasAudio
                 case .video: return info.hasVideo && (!info.isImage || format.id == "gif")
                 case .image: return info.hasVideo
+                case .document: return false
                 }
             }
         } else {

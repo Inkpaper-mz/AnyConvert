@@ -164,6 +164,9 @@ final class AppModel {
                     return info.hasVideo && (!info.isImage || format.id == "gif")
                 case .image:
                     return info.hasVideo
+                case .document:
+                    let ext = job.url.pathExtension.lowercased()
+                    return DocumentEngine.isDocument(ext) || DocumentEngine.isImage(ext)
                 }
             }
         }
@@ -337,6 +340,22 @@ final class AppModel {
             let standardized = url.standardizedFileURL
             if existing.contains(standardized) { continue }
             if jobs.contains(where: { $0.url.standardizedFileURL == standardized }) { continue }
+            let sourceExt = standardized.pathExtension.lowercased()
+            if DocumentEngine.isDocument(sourceExt) {
+                // 拖入文档时自动切到 PDF，避免用户在媒体格式下看到“不支持”
+                if !DocumentEngine.canConvert(target: currentFormat.ext, sourceExt: sourceExt) {
+                    setFormat("pdf")
+                }
+                guard DocumentEngine.canConvert(target: currentFormat.ext, sourceExt: sourceExt) else {
+                    observer?.modelDidProduceMessage(self, message: L10n.t("msg.docUnsupported", sourceExt, currentFormat.ext))
+                    continue
+                }
+            } else if currentFormat.kind == .document {
+                guard DocumentEngine.canConvert(target: currentFormat.ext, sourceExt: sourceExt) else {
+                    observer?.modelDidProduceMessage(self, message: L10n.t("msg.docUnsupported", sourceExt, currentFormat.ext))
+                    continue
+                }
+            }
             let job = Job(url: standardized, status: .probing)
             jobs.append(job)
             added.append(job.id)
@@ -359,6 +378,10 @@ final class AppModel {
         }
         Task.detached(priority: .userInitiated) {
             for (id, url) in pairs {
+                if DocumentEngine.isDocument(url.pathExtension.lowercased()) {
+                    await MainActor.run { self.markDocumentReady(id) }
+                    continue
+                }
                 do {
                     let info = try await MediaProbe.probe(url)
                     await MainActor.run { self.apply(info: info, to: id) }
@@ -498,7 +521,8 @@ final class AppModel {
             customWidth: customWidth,
             customHeight: customHeight,
             extraArguments: extraArguments,
-            targetBytes: targetSizeMB.map { Int64($0 * 1024 * 1024) },
+            targetBytes: (currentFormat.kind == .image || currentFormat.kind == .video)
+                ? targetSizeMB.map { Int64($0 * 1024 * 1024) } : nil,
             allowDownscale: allowDownscale
         )
     }
@@ -508,9 +532,60 @@ final class AppModel {
         return input.deletingLastPathComponent()
     }
 
+    private func markDocumentReady(_ id: UUID) {
+        guard let index = jobs.firstIndex(where: { $0.id == id }) else { return }
+        jobs[index].info = MediaInfo()
+        jobs[index].status = .waiting
+        jobs[index].message = L10n.t("group.document")
+        observer?.modelJobDidUpdate(self, id: id)
+    }
+
+    private func convertDocument(id: UUID, job: Job, settings: ConversionSettings) async {
+        let sourceExt = job.url.pathExtension.lowercased()
+        guard DocumentEngine.canConvert(target: settings.format.ext, sourceExt: sourceExt) else {
+            fail(id, message: L10n.t("msg.docUnsupported", sourceExt, settings.format.ext))
+            return
+        }
+        let directory = outputDirectory(for: job.url)
+        if !FileManager.default.fileExists(atPath: directory.path) {
+            try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        }
+        let output = FileUtilities.outputURL(for: job.url, ext: settings.format.ext, directory: directory)
+
+        guard let runningIndex = jobs.firstIndex(where: { $0.id == id }) else { return }
+        jobs[runningIndex].status = .running
+        jobs[runningIndex].progress = 0
+        jobs[runningIndex].message = L10n.t("group.document")
+        jobs[runningIndex].startedAt = Date()
+        observer?.modelJobDidUpdate(self, id: id)
+
+        do {
+            try await DocumentEngine.convert(src: job.url, target: settings.format, output: output) { [weak self] percent in
+                Task { @MainActor in self?.updateProgress(jobID: id, percent: percent, speed: "") }
+            }
+            guard let doneIndex = jobs.firstIndex(where: { $0.id == id }) else { return }
+            jobs[doneIndex].status = .done
+            jobs[doneIndex].progress = 1
+            jobs[doneIndex].outputURL = output
+            jobs[doneIndex].message = ""
+            jobs[doneIndex].elapsed = jobs[doneIndex].startedAt.map { Date().timeIntervalSince($0) } ?? 0
+            jobs[doneIndex].startedAt = nil
+            lastOutputDirectory = directory
+            observer?.modelJobDidUpdate(self, id: id)
+        } catch {
+            try? FileManager.default.removeItem(at: output)
+            fail(id, message: error.localizedDescription)
+        }
+    }
+
     private func convert(id: UUID, settings: ConversionSettings) async {
         guard let index = jobs.firstIndex(where: { $0.id == id }) else { return }
         let job = jobs[index]
+        if settings.format.kind == .document
+            || DocumentEngine.isDocument(job.url.pathExtension.lowercased()) {
+            await convertDocument(id: id, job: job, settings: settings)
+            return
+        }
 
         var media = job.info
         if media == nil {

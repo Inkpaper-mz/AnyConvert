@@ -178,7 +178,19 @@
     "msg.targetUnreachable": "无法压缩到 %@：当前参数下最小约 %@。可提高目标体积或勾选「允许降低分辨率」。",
     "msg.compressFormat": "目标体积压缩仅支持图片或视频格式。",
     "msg.pngNeedsScale": "PNG 是无损格式，需要勾选「允许降低分辨率」才能压到目标体积。",
-    "msg.noDuration": "无法读取时长，不能按体积压缩。"
+    "msg.noDuration": "无法读取时长，不能按体积压缩。",
+    "fmt.pdf.sub": "可检索 PDF",
+    "fmt.docx.sub": "Word 文档",
+    "fmt.odt.sub": "OpenDocument 文档",
+    "fmt.rtf.sub": "RTF 文档",
+    "fmt.txt.sub": "纯文本",
+    "fmt.html.sub": "网页",
+    "fmt.xlsx.sub": "Excel 表格",
+    "fmt.csv.sub": "逗号分隔表格",
+    "fmt.pptx.sub": "PowerPoint 演示",
+    "group.document": "文档",
+    "msg.docEngine": "文档转换需要 LibreOffice：请安装 LibreOffice.app，或用 SOFFICE 指定路径。",
+    "msg.docUnsupported": "不支持将 .%@ 转换为 .%@，请检查文件类型。"
   },
   "zh-Hant": {
     "app.title": "萬能轉碼",
@@ -359,7 +371,19 @@
     "msg.targetUnreachable": "無法壓縮到 %@：目前參數下最小約 %@。可提高目標容量或勾選「允許降低解析度」。",
     "msg.compressFormat": "目標容量壓縮僅支援圖片或影片格式。",
     "msg.pngNeedsScale": "PNG 為無損格式，需勾選「允許降低解析度」才能壓到目標容量。",
-    "msg.noDuration": "無法讀取時長，不能依容量壓縮。"
+    "msg.noDuration": "無法讀取時長，不能依容量壓縮。",
+    "fmt.pdf.sub": "可檢索 PDF",
+    "fmt.docx.sub": "Word 文件",
+    "fmt.odt.sub": "OpenDocument 文件",
+    "fmt.rtf.sub": "RTF 文件",
+    "fmt.txt.sub": "純文字",
+    "fmt.html.sub": "網頁",
+    "fmt.xlsx.sub": "Excel 表格",
+    "fmt.csv.sub": "逗號分隔表格",
+    "fmt.pptx.sub": "PowerPoint 簡報",
+    "group.document": "文件",
+    "msg.docEngine": "文件轉換需要 LibreOffice：請安裝 LibreOffice.app，或用 SOFFICE 指定路徑。",
+    "msg.docUnsupported": "不支援將 .%@ 轉換為 .%@，請檢查檔案類型。"
   },
   "en": {
     "app.title": "AnyConvert",
@@ -540,7 +564,19 @@
     "msg.targetUnreachable": "Cannot reach %@; the smallest is about %@. Raise the target or enable \"Allow lowering resolution\".",
     "msg.compressFormat": "Target-size compression only supports image or video formats.",
     "msg.pngNeedsScale": "PNG is lossless; enable \"Allow lowering resolution\" to hit the target.",
-    "msg.noDuration": "Duration is unknown, cannot compress to a size target."
+    "msg.noDuration": "Duration is unknown, cannot compress to a size target.",
+    "fmt.pdf.sub": "Searchable PDF",
+    "fmt.docx.sub": "Word document",
+    "fmt.odt.sub": "OpenDocument",
+    "fmt.rtf.sub": "Rich text",
+    "fmt.txt.sub": "Plain text",
+    "fmt.html.sub": "Web page",
+    "fmt.xlsx.sub": "Excel sheet",
+    "fmt.csv.sub": "Comma-separated",
+    "fmt.pptx.sub": "Presentation",
+    "group.document": "Documents",
+    "msg.docEngine": "Document conversion needs LibreOffice. Install LibreOffice.app or set SOFFICE.",
+    "msg.docUnsupported": "Cannot convert .%@ to .%@. Check the file type."
   },
   "ja": {
     "app.title": "万能変換",
@@ -721,7 +757,19 @@
     "msg.targetUnreachable": "%@ に圧縮できません。現在の設定での最小は約 %@ です。目標を上げるか「解像度を下げる」を有効にしてください。",
     "msg.compressFormat": "目標サイズ圧縮は画像・動画のみ対応です。",
     "msg.pngNeedsScale": "PNG は可逆形式です。「解像度を下げる」を有効にしてください。",
-    "msg.noDuration": "長さが取得できず、サイズ指定圧縮はできません。"
+    "msg.noDuration": "長さが取得できず、サイズ指定圧縮はできません。",
+    "fmt.pdf.sub": "検索可能 PDF",
+    "fmt.docx.sub": "Word 文書",
+    "fmt.odt.sub": "OpenDocument",
+    "fmt.rtf.sub": "リッチテキスト",
+    "fmt.txt.sub": "テキスト",
+    "fmt.html.sub": "Web ページ",
+    "fmt.xlsx.sub": "Excel 表",
+    "fmt.csv.sub": "CSV 表",
+    "fmt.pptx.sub": "プレゼン",
+    "group.document": "文書",
+    "msg.docEngine": "文書変換には LibreOffice が必要です。",
+    "msg.docUnsupported": ".%@ から .%@ へは変換できません。"
   },
   "ko": {
     "app.title": "만능 변환",
@@ -902,7 +950,19 @@
     "msg.targetUnreachable": "%@ 까지 압축할 수 없습니다. 현재 설정의 최소는 약 %@ 입니다. 목표를 높이거나 \"해상도 낮추기\"를 켜세요.",
     "msg.compressFormat": "목표 용량 압축은 이미지/비디오 형식만 지원합니다.",
     "msg.pngNeedsScale": "PNG는 무손실입니다. \"해상도 낮추기\"를 켜야 목표에 도달합니다.",
-    "msg.noDuration": "길이를 읽을 수 없어 용량 지정 압축을 할 수 없습니다."
+    "msg.noDuration": "길이를 읽을 수 없어 용량 지정 압축을 할 수 없습니다.",
+    "fmt.pdf.sub": "검색 가능 PDF",
+    "fmt.docx.sub": "Word 문서",
+    "fmt.odt.sub": "OpenDocument",
+    "fmt.rtf.sub": "서식 텍스트",
+    "fmt.txt.sub": "일반 텍스트",
+    "fmt.html.sub": "웹 페이지",
+    "fmt.xlsx.sub": "Excel 시트",
+    "fmt.csv.sub": "CSV 표",
+    "fmt.pptx.sub": "프레젠테이션",
+    "group.document": "문서",
+    "msg.docEngine": "문서 변환에는 LibreOffice가 필요합니다.",
+    "msg.docUnsupported": ".%@ → .%@ 변환은 지원되지 않습니다."
   },
   "fr": {
     "app.title": "AnyConvert",
@@ -1083,6 +1143,18 @@
     "msg.targetUnreachable": "Impossible d'atteindre %@ ; le minimum est d'environ %@. Augmentez la cible ou activez « Autoriser la réduction de résolution ».",
     "msg.compressFormat": "La compression par taille ne concerne que les images et vidéos.",
     "msg.pngNeedsScale": "PNG est sans perte ; activez « Autoriser la réduction de résolution ».",
-    "msg.noDuration": "Durée inconnue, compression par taille impossible."
+    "msg.noDuration": "Durée inconnue, compression par taille impossible.",
+    "fmt.pdf.sub": "PDF indexable",
+    "fmt.docx.sub": "Document Word",
+    "fmt.odt.sub": "OpenDocument",
+    "fmt.rtf.sub": "Texte enrichi",
+    "fmt.txt.sub": "Texte brut",
+    "fmt.html.sub": "Page web",
+    "fmt.xlsx.sub": "Feuille Excel",
+    "fmt.csv.sub": "CSV",
+    "fmt.pptx.sub": "Présentation",
+    "group.document": "Documents",
+    "msg.docEngine": "La conversion de documents nécessite LibreOffice.",
+    "msg.docUnsupported": "Conversion .%@ → .%@ impossible."
   }
 }
