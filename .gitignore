@@ -17,3 +17,8 @@ vendor/
 
 # 推送 CI 工作流需要 token 具备 workflow 权限；授权后删除下面一行即可
 .github/workflows/
+
+# Python 跨平台子工程
+__pycache__/
+*.pyc
+service.log

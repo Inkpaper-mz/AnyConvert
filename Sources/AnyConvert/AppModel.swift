@@ -36,6 +36,8 @@ final class AppModel {
     private(set) var customWidth: Int?
     private(set) var customHeight: Int?
     private(set) var extraArguments: [String] = []
+    private(set) var targetSizeMB: Double?
+    private(set) var allowDownscale = true
 
     private let engine = Engine.shared
     private let defaults = UserDefaults.standard
@@ -51,6 +53,8 @@ final class AppModel {
         static let customDirectory = "ac.customDirectory"
         static let customWidth = "ac.customWidth"
         static let customHeight = "ac.customHeight"
+        static let targetSizeMB = "ac.targetSizeMB"
+        static let allowDownscale = "ac.allowDownscale"
     }
 
     private init() {}
@@ -84,6 +88,11 @@ final class AppModel {
         let storedHeight = defaults.integer(forKey: Keys.customHeight)
         customWidth = storedWidth > 0 ? storedWidth : nil
         customHeight = storedHeight > 0 ? storedHeight : nil
+        let storedTarget = defaults.double(forKey: Keys.targetSizeMB)
+        targetSizeMB = storedTarget > 0 ? storedTarget : nil
+        if defaults.object(forKey: Keys.allowDownscale) != nil {
+            allowDownscale = defaults.bool(forKey: Keys.allowDownscale)
+        }
     }
 
     // MARK: - 计算属性
@@ -243,6 +252,21 @@ final class AppModel {
         guard outputMode != value else { return }
         outputMode = value
         defaults.set(value.rawValue, forKey: Keys.outputMode)
+        observer?.modelSettingsDidChange(self)
+    }
+
+    func setTargetSizeMB(_ value: Double?) {
+        let normalized: Double? = (value ?? 0) > 0 ? value : nil
+        guard targetSizeMB != normalized else { return }
+        targetSizeMB = normalized
+        defaults.set(normalized ?? 0, forKey: Keys.targetSizeMB)
+        observer?.modelSettingsDidChange(self)
+    }
+
+    func setAllowDownscale(_ value: Bool) {
+        guard allowDownscale != value else { return }
+        allowDownscale = value
+        defaults.set(value, forKey: Keys.allowDownscale)
         observer?.modelSettingsDidChange(self)
     }
 
@@ -473,7 +497,9 @@ final class AppModel {
             hardware: hardware && hardwareAvailable && currentFormat.kind == .video && !currentFormat.isAnimatedImage,
             customWidth: customWidth,
             customHeight: customHeight,
-            extraArguments: extraArguments
+            extraArguments: extraArguments,
+            targetBytes: targetSizeMB.map { Int64($0 * 1024 * 1024) },
+            allowDownscale: allowDownscale
         )
     }
 
@@ -514,6 +540,10 @@ final class AppModel {
             fail(id, message: ConvertError.imageNeedsImageFormat.localizedDescription)
             return
         }
+        if info.width > 0, info.height > 0, info.width * info.height > 100_000_000 {
+            fail(id, message: L10n.t("msg.tooLarge"))
+            return
+        }
 
         let directory = outputDirectory(for: job.url)
         if !FileManager.default.fileExists(atPath: directory.path) {
@@ -542,12 +572,14 @@ final class AppModel {
             lastOutputDirectory = directory
             observer?.modelJobDidUpdate(self, id: id)
         } catch let error as ConvertError {
+            try? FileManager.default.removeItem(at: output)
             if case .cancelled = error {
                 markCancelled(id)
             } else {
                 fail(id, message: error.localizedDescription)
             }
         } catch {
+            try? FileManager.default.removeItem(at: output)
             fail(id, message: error.localizedDescription)
         }
     }
@@ -556,6 +588,14 @@ final class AppModel {
                                job: Job,
                                info: MediaInfo,
                                output: URL) async throws {
+        if let targetBytes = settings.targetBytes, targetBytes > 0 {
+            try await CompressionEngine.compress(input: job.url, settings: settings,
+                                                 output: output, info: info) { [weak self] percent, speed in
+                Task { @MainActor in self?.updateProgress(jobID: job.id, percent: percent, speed: speed) }
+            }
+            return
+        }
+
         guard let conversionEngine = EngineRegistry.engine(for: settings.format),
               var arguments = conversionEngine.arguments(for: settings, input: job.url, output: output, info: info) else {
             throw ConvertError.encodeFailed("No engine available")

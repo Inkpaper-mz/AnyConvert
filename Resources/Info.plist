@@ -19,9 +19,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.2.0</string>
+	<string>1.5.0</string>
 	<key>CFBundleVersion</key>
-	<string>3</string>
+	<string>5</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.video</string>
 	<key>LSMinimumSystemVersion</key>
@@ -44,9 +44,20 @@
 			<string>convertWithAnyConvert</string>
 			<key>NSPortName</key>
 			<string>AnyConvert</string>
+			<key>NSUserData</key>
+			<string>default</string>
+			<key>NSRestricted</key>
+			<false/>
+			<key>NSRequiredContext</key>
+			<dict>
+				<key>NSApplicationIdentifier</key>
+				<string>com.apple.finder</string>
+			</dict>
 			<key>NSSendFileTypes</key>
 			<array>
-				<string>public.item</string>
+				<string>public.movie</string>
+				<string>public.audio</string>
+				<string>public.image</string>
 			</array>
 		</dict>
 	</array>

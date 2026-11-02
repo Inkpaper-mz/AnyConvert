@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>万能转码 · Universal Converter</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">⇄</div>
+    <div>
+      <h1>万能转码</h1>
+      <p>文档 · 图片 · 音频 · 视频</p>
+    </div>
+  </div>
+  <div class="engines" id="engines"></div>
+  <div class="top-actions">
+    <button class="ghost" id="toolsBtn">工具箱</button>
+    <button class="ghost" id="settingsBtn">高级设置</button>
+  </div>
+</header>
+
+<main class="layout">
+  <aside class="sidebar">
+    <div class="cats" id="cats"></div>
+    <div class="formats" id="formats"></div>
+    <div class="side-note">目标格式 · 拖入即校验</div>
+  </aside>
+
+  <section class="workspace">
+    <div class="drop" id="drop">
+      <div class="drop-icon">⇪</div>
+      <h2>把文件拖到这里</h2>
+      <p>批量转换、按体积压缩、文档 / 图片 / 音视频，全部本地离线完成</p>
+      <div class="drop-actions">
+        <button class="primary" id="pickBtn">选择文件</button>
+        <button class="ghost" id="pickFolderBtn">选择文件夹</button>
+      </div>
+      <div class="drop-target" id="dropTarget"></div>
+      <input type="file" id="fileInput" multiple hidden>
+      <input type="file" id="folderInput" webkitdirectory multiple hidden>
+    </div>
+
+    <div class="jobs" id="jobs">
+      <div class="empty" id="empty">
+        <div class="empty-icon">🗂️</div>
+        <p>还没有任务</p>
+        <span>拖入文件后会自动出现在这里</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="actionbar">
+  <div class="field">
+    <label>预设</label>
+    <select id="preset">
+      <option value="">自定义</option>
+      <option value="jpg:2">图片 · 2 MB</option>
+      <option value="jpg:0.5">图片 · 500 KB</option>
+      <option value="mp4:8">视频 · 8 MB</option>
+      <option value="mp4:25">视频 · 25 MB</option>
+      <option value="pdf:">文档 → PDF</option>
+      <option value="mp3:">音频 → MP3</option>
+    </select>
+  </div>
+
+  <label class="switch"><input type="checkbox" id="sizeToggle"> 限制体积</label>
+  <div class="field compact">
+    <input type="number" id="sizeValue" value="2.0" min="0.1" max="500" step="0.5" disabled>
+    <span>MB</span>
+  </div>
+  <label class="switch"><input type="checkbox" id="downscale" checked disabled> 允许降低分辨率</label>
+
+  <button class="summary" id="summaryBtn">1080p · 标准 · 原始帧率 · 192k · H.264</button>
+
+  <div class="field">
+    <label>并行</label>
+    <select id="workers">
+      <option>1</option><option>2</option><option selected>3</option>
+      <option>4</option><option>5</option><option>6</option><option>8</option>
+    </select>
+  </div>
+
+  <div class="spacer"></div>
+  <div class="stats" id="stats">共 0 个</div>
+  <button class="ghost" id="cancelBtn" disabled>取消</button>
+  <button class="primary big" id="startBtn" disabled>开始转换</button>
+</footer>
+
+<!-- 高级设置 -->
+<div class="modal" id="settingsModal">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h3>高级设置</h3>
+      <button class="icon" data-close>✕</button>
+    </div>
+    <div class="sheet-body">
+      <label class="row"><span>分辨率</span>
+        <select id="optResolution">
+          <option value="original">保持原始</option>
+          <option value="2160">4K</option>
+          <option value="1080">1080p</option>
+          <option value="720">720p</option>
+          <option value="480">480p</option>
+          <option value="360">360p</option>
+          <option value="custom">自定义</option>
+        </select>
+      </label>
+      <label class="row" id="customSizeRow"><span>自定义尺寸</span>
+        <div class="pair"><input type="number" id="optWidth" value="1920" min="16" max="7680"> ×
+          <input type="number" id="optHeight" value="1080" min="16" max="7680"></div>
+      </label>
+      <label class="row"><span>画质</span>
+        <select id="optQuality">
+          <option value="high">高质量</option>
+          <option value="balanced" selected>标准</option>
+          <option value="small">小体积</option>
+        </select>
+      </label>
+      <label class="row"><span>帧率</span>
+        <select id="optFps">
+          <option value="0">保持原始</option>
+          <option value="60">60 fps</option>
+          <option value="30">30 fps</option>
+          <option value="24">24 fps</option>
+        </select>
+      </label>
+      <label class="row"><span>音频码率</span>
+        <select id="optAudio">
+          <option value="128">128 kbps</option>
+          <option value="192" selected>192 kbps</option>
+          <option value="256">256 kbps</option>
+          <option value="320">320 kbps</option>
+        </select>
+      </label>
+      <label class="row"><span>视频编码</span>
+        <select id="optCodec">
+          <option value="h264">H.264</option>
+          <option value="h265">H.265</option>
+          <option value="av1">AV1</option>
+        </select>
+      </label>
+    </div>
+    <div class="sheet-foot">
+      <button class="ghost" data-close>取消</button>
+      <button class="primary" id="saveOptions">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 工具箱 -->
+<div class="modal" id="toolsModal">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h3>工具箱</h3>
+      <button class="icon" data-close>✕</button>
+    </div>
+    <div class="sheet-body tools">
+      <div class="tool" data-tool="merge-pdfs"><b>合并 PDF</b><span>多份合成一份</span></div>
+      <div class="tool" data-tool="split-pdf"><b>拆分 PDF</b><span>按页拆分，多页自动打包</span></div>
+      <div class="tool" data-tool="pdf-images"><b>PDF 转图片</b><span>每页导出 PNG/JPG（ZIP）</span></div>
+      <div class="tool" data-tool="pdf-tables"><b>PDF 表格转 Excel</b><span>提取表格到 xlsx</span></div>
+      <div class="tool" data-tool="images-to-pdf"><b>图片转 PDF</b><span>多张图片合成 PDF</span></div>
+      <div class="tool" data-tool="zip"><b>打包 ZIP</b><span>任意文件压缩打包</span></div>
+      <div class="row"><span>ZIP 级别</span><input type="number" id="zipLevel" value="6" min="0" max="9"></div>
+      <div id="toolResult" class="tool-result"></div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="toolInput" multiple hidden>
+<div class="toasts" id="toasts"></div>
+<script src="/app.js"></script>
+</body>
+</html>

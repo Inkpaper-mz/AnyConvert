@@ -1,0 +1,3 @@
+# 可选：启用真正的「拖拽入窗口」
+# macOS/Linux: python3 -m pip install --user tkinterdnd2
+tkinterdnd2>=0.3.0

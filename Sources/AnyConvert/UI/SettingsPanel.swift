@@ -98,6 +98,11 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
     private let pathLabel = Label.make("", size: 10, color: .secondaryLabelColor)
     private let chipsRow = NSStackView()
     private let incompatibleHint = Label.make(L10n.t("settings.incompatible"), size: 10, color: .secondaryLabelColor)
+    private let compressToggle = NSButton(checkboxWithTitle: L10n.t("settings.targetSize"), target: nil, action: nil)
+    private let compressField = NSTextField()
+    private let downscaleToggle = NSButton(checkboxWithTitle: L10n.t("settings.allowDownscale"), target: nil, action: nil)
+    private let compressHint = Label.make(L10n.t("settings.targetSizeHint"), size: 10, color: .secondaryLabelColor)
+    private var compressViews: [NSView] = []
     private let divider = HairlineView()
     private let infoBox = CardView()
     private let customRow = NSStackView()
@@ -240,6 +245,45 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         bitrateViews.append(bitratePopup)
         stack.addArrangedSubview(bitratePopup)
         stack.setCustomSpacing(18, after: bitratePopup)
+
+        // 压缩
+        let compressTitle = Label.make(L10n.t("settings.compression"), size: 10, weight: .semibold, color: .secondaryLabelColor)
+        compressViews.append(compressTitle)
+        stack.addArrangedSubview(compressTitle)
+
+        compressToggle.target = self
+        compressToggle.action = #selector(compressToggled)
+        compressToggle.font = Theme.font(12)
+        compressToggle.translatesAutoresizingMaskIntoConstraints = false
+        compressField.placeholderString = "2.0"
+        compressField.font = Theme.font(12)
+        compressField.alignment = .right
+        compressField.bezelStyle = .roundedBezel
+        compressField.translatesAutoresizingMaskIntoConstraints = false
+        compressField.target = self
+        compressField.action = #selector(compressValueChanged)
+        compressField.delegate = self
+        compressField.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        let unit = Label.make(L10n.t("settings.targetSizeUnit"), size: 11, color: .secondaryLabelColor)
+        let compressRow = NSStackView(views: [compressToggle, compressField, unit])
+        compressRow.orientation = .horizontal
+        compressRow.spacing = 6
+        compressRow.alignment = .centerY
+        compressViews.append(compressRow)
+        stack.addArrangedSubview(compressRow)
+
+        downscaleToggle.target = self
+        downscaleToggle.action = #selector(downscaleToggled)
+        downscaleToggle.font = Theme.font(12)
+        downscaleToggle.translatesAutoresizingMaskIntoConstraints = false
+        compressViews.append(downscaleToggle)
+        stack.addArrangedSubview(downscaleToggle)
+
+        compressHint.lineBreakMode = .byWordWrapping
+        compressHint.maximumNumberOfLines = 0
+        compressViews.append(compressHint)
+        stack.addArrangedSubview(compressHint)
+        stack.setCustomSpacing(18, after: compressHint)
 
         // 硬件加速
         hardwareSwitch.target = self
@@ -408,6 +452,16 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         for view in bitrateViews { view.isHidden = format.lossless || format.isImage }
         for view in hardwareViews { view.isHidden = format.kind != .video }
 
+        let mediaFormat = format.kind == .image || format.kind == .video
+        for view in compressViews { view.isHidden = !mediaFormat }
+        compressToggle.state = model.targetSizeMB != nil ? .on : .off
+        if compressField.currentEditor() == nil {
+            compressField.stringValue = model.targetSizeMB.map { String(format: "%.1f", $0) } ?? ""
+        }
+        compressField.isEnabled = model.targetSizeMB != nil && !running
+        downscaleToggle.state = model.allowDownscale ? .on : .off
+        downscaleToggle.isEnabled = model.targetSizeMB != nil && !running
+
         qualityControl.selectedSegment = Quality.allCases.firstIndex(of: model.quality) ?? 1
         qualityHint.stringValue = model.quality.detail
         _ = resolutionPopup.selectItem(withTag: ResolutionPreset.allCases.firstIndex(of: model.resolution) ?? 0)
@@ -450,6 +504,10 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
     // MARK: - 文本输入
 
     func controlTextDidChange(_ obj: Notification) {
+        if let field = obj.object as? NSTextField, field === compressField {
+            model?.setTargetSizeMB(Double(field.stringValue))
+            return
+        }
         guard let field = obj.object as? NSTextField, field === widthField || field === heightField else { return }
         // 只接受数字
         let filtered = field.stringValue.filter { $0.isNumber }
@@ -572,6 +630,24 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
 
     @objc private func chooseDirectory() {
         model?.pickOutputDirectory()
+    }
+
+    @objc private func compressToggled() {
+        if compressToggle.state == .on {
+            let value = Double(compressField.stringValue) ?? 2.0
+            compressField.stringValue = String(format: "%.1f", value)
+            model?.setTargetSizeMB(value)
+        } else {
+            model?.setTargetSizeMB(nil)
+        }
+    }
+
+    @objc private func compressValueChanged() {
+        model?.setTargetSizeMB(Double(compressField.stringValue))
+    }
+
+    @objc private func downscaleToggled() {
+        model?.setAllowDownscale(downscaleToggle.state == .on)
     }
 
     @objc private func customResolutionEdited() {

@@ -22,6 +22,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         L10n.bootstrap()
+        NSApp.servicesProvider = self
+        NSUpdateDynamicServices()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -45,9 +47,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.orderFrontRegardless()
         self.window = window
 
-        NSApp.servicesProvider = self
-        NSUpdateDynamicServices()
         NSApp.activate(ignoringOtherApps: true)
+        warnIfTranslocated()
 
         // 调试用：--focus-custom 自动聚焦第一个可编辑输入框（用于验证焦点环）
         if CommandLine.arguments.contains("--focus-custom") {
@@ -81,6 +82,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
            let seconds = Double(args[quitIndex + 1]) {
             DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
                 MainActor.assumeIsolated { NSApp.terminate(nil) }
+            }
+        }
+
+        // 调试用：--target-size <MB> 与 --no-downscale
+        if let sizeIndex = args.firstIndex(of: "--target-size"), sizeIndex + 1 < args.count,
+           let value = Double(args[sizeIndex + 1]) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                MainActor.assumeIsolated { AppModel.shared.setTargetSizeMB(value) }
+            }
+        }
+        if args.contains("--no-downscale") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.36) {
+                MainActor.assumeIsolated { AppModel.shared.setAllowDownscale(false) }
             }
         }
 
@@ -125,15 +139,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Finder 右键 → 服务 →「用万能转码转换」
     @objc func convertWithAnyConvert(_ pboard: NSPasteboard,
                                      userData: String,
-                                     error: AutoreleasingUnsafeMutablePointer<NSString>) {
+                                     error: AutoreleasingUnsafeMutablePointer<NSString?>?) {
+        acLog("service invoked, userData=\(userData)")
         let options: [NSPasteboard.ReadingOptionKey: Any] = [.urlReadingFileURLsOnly: true]
         guard let urls = pboard.readObjects(forClasses: [NSURL.self], options: options) as? [URL],
               !urls.isEmpty else {
-            error.pointee = L10n.t("msg.noMedia") as NSString
+            error?.pointee = L10n.t("msg.noMedia") as NSString
             return
         }
         AppModel.shared.addFiles(urls)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    /// DMG 内直接运行会被 App Translocation 隔离，导致服务注册路径失效
+    private func warnIfTranslocated() {
+        guard Bundle.main.bundlePath.contains("/AppTranslocation/") else { return }
+        let alert = NSAlert()
+        alert.messageText = L10n.t("msg.translocatedTitle")
+        alert.informativeText = L10n.t("msg.translocatedBody")
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: L10n.t("btn.ok"))
+        alert.runModal()
     }
 
     /// Finder 双击 / 打开方式

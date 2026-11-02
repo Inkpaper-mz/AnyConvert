@@ -258,6 +258,8 @@ struct ConversionSettings {
     var customWidth: Int? = nil
     var customHeight: Int? = nil
     var extraArguments: [String] = []
+    var targetBytes: Int64? = nil
+    var allowDownscale: Bool = true
 }
 
 enum ConvertError: LocalizedError {

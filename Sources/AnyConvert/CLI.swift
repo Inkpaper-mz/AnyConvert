@@ -4,6 +4,7 @@ import Foundation
 /// 与 GUI 共用 MediaProbe / CommandBuilder / Engine，便于自动化与后续跨平台复用。
 enum CLI {
     static func run(_ arguments: [String]) -> Int32 {
+        L10n.bootstrap()
         var input: String?
         var target = "mp3"
         var outputDir: String?
@@ -17,6 +18,23 @@ enum CLI {
         var showCapabilities = false
         var targetsFor: String?
         var quiet = false
+        var presetID: String?
+        var targetSizeMB: Double?
+        var allowDownscale = true
+
+        // 先应用预设作为默认值，命令行参数仍可覆盖
+        if let presetIndex = arguments.firstIndex(of: "--preset"),
+           presetIndex + 1 < arguments.count,
+           let preset = PresetStore.shared.preset(id: arguments[presetIndex + 1]) {
+            presetID = preset.id
+            target = preset.formatID
+            quality = preset.quality
+            resolution = preset.resolution
+            bitrate = preset.bitrate
+            hardware = preset.hardware
+            width = preset.customWidth
+            height = preset.customHeight
+        }
 
         var index = 0
         func next() -> String? {
@@ -43,6 +61,10 @@ enum CLI {
             case "--hw", "--hardware": hardware = true
             case "--json": json = true
             case "--quiet": quiet = true
+            case "--preset": _ = next()
+            case "--target-size":
+                targetSizeMB = next().flatMap(Double.init)
+            case "--no-downscale": allowDownscale = false
             case "--capabilities": showCapabilities = true
             case "--targets": targetsFor = next()
             case "--help", "-h":
@@ -82,6 +104,9 @@ enum CLI {
             return fail(error.localizedDescription, code: "E_PROBE", json: json)
         }
 
+        if info.width > 0, info.height > 0, info.width * info.height > 100_000_000 {
+            return fail("image is too large (over 100 megapixels)", code: "E_TOO_LARGE", json: json)
+        }
         guard let format = Catalog.all.first(where: { $0.id == target }) else {
             return fail("unknown target: \(target)", code: "E_TARGET", json: json)
         }
@@ -103,9 +128,14 @@ enum CLI {
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let output = FileUtilities.outputURL(for: source, ext: format.ext, directory: directory)
 
+        if let targetSizeMB, targetSizeMB > 0, format.kind != .image, format.kind != .video {
+            return fail("target-size only supports image/video", code: "E_TARGET_KIND", json: json)
+        }
         let settings = ConversionSettings(format: format, quality: quality, resolution: resolution,
                                           audioBitrate: bitrate, hardware: hardware,
-                                          customWidth: width, customHeight: height)
+                                          customWidth: width, customHeight: height,
+                                          targetBytes: targetSizeMB.map { Int64($0 * 1024 * 1024) },
+                                          allowDownscale: allowDownscale)
         guard let engine = EngineRegistry.engine(for: format),
               let args = engine.arguments(for: settings, input: source, output: output, info: info) else {
             return fail("no engine for \(format.id)", code: "E_NO_ENGINE", json: json)
@@ -119,12 +149,24 @@ enum CLI {
         let semaphore = DispatchSemaphore(value: 0)
         Task {
             do {
-                try await Engine.shared.run(arguments: args, duration: info.duration) { percent, _ in
-                    guard !json, !quiet else { return }
-                    let value = Int(percent * 100)
-                    if value != lastPercent {
-                        lastPercent = value
-                        FileHandle.standardError.write(Data("\r  \(value)%".utf8))
+                if settings.targetBytes != nil {
+                    try await CompressionEngine.compress(input: source, settings: settings,
+                                                         output: output, info: info) { percent, _ in
+                        guard !json, !quiet else { return }
+                        let value = Int(percent * 100)
+                        if value != lastPercent {
+                            lastPercent = value
+                            FileHandle.standardError.write(Data("\r  \(value)%".utf8))
+                        }
+                    }
+                } else {
+                    try await Engine.shared.run(arguments: args, duration: info.duration) { percent, _ in
+                        guard !json, !quiet else { return }
+                        let value = Int(percent * 100)
+                        if value != lastPercent {
+                            lastPercent = value
+                            FileHandle.standardError.write(Data("\r  \(value)%".utf8))
+                        }
                     }
                 }
             } catch {
@@ -156,6 +198,7 @@ enum CLI {
                 "bytes": size,
                 "elapsedMs": elapsedMs,
                 "engine": engine.displayName,
+                "preset": presetID ?? "",
             ]
             printJSON(payload)
         } else {
@@ -182,6 +225,9 @@ enum CLI {
           -r, --resolution <original|uhd4k|fhd1080|hd720|sd480|sd360|custom>
           --width <n> --height <n>  自定义尺寸
           -b, --bitrate <128|192|256|320>
+          --preset <id>             使用预设（可用 --capabilities 查看）
+          --target-size <MB>        压缩到不超过该体积（图片/视频）
+          --no-downscale            禁止为达标而降低分辨率
           --hw                      Apple VideoToolbox 硬件编码
           --json                    JSON 输出（成功 stdout / 失败 stderr）
           --quiet                   不打印进度

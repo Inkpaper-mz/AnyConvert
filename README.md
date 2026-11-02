@@ -1,9 +1,40 @@
-# 万能转码 · AnyConvert
+# 万能转码 · AnyConvert 1.5.0
 
-原生 macOS 音视频 / 图片格式转换器：**Swift + AppKit 界面 + 内置 FFmpeg 引擎**，拖入文件、选好格式、一键互转。
-界面支持 **6 种语言**，全部转换在本机完成，不联网、不上传。
+全平台离线格式转换器：**macOS 原生应用 + Windows/Linux 本地 Web UI**。
+43 种目标格式（文档 / 图片 / 音频 / 视频），支持按目标体积压缩；
+自带 FFmpeg、LibreOffice 与 OCR 引擎，全部在本机完成，不联网、不上传。
 
-![界面预览](docs/screenshot.png)
+![Web UI](docs/webui.png)
+
+## 右键菜单
+
+```bash
+python3 scripts/install_context_menu.py install                 # 安装全部格式
+python3 scripts/install_context_menu.py install --formats pdf,mp3
+python3 scripts/install_context_menu.py uninstall
+```
+
+- **macOS**：写入 `~/Library/Services/万能转码 · 转 XXX.workflow`（Finder 快速操作 / 服务），调用 CLI，转换完成弹系统通知
+- **Windows**：写入 `HKCU\Software\Classes\*\shell\AnyConvert` 级联菜单
+- **Linux**：写入 `~/.local/share/nautilus/scripts/万能转码/`
+
+转换结果输出到源文件所在目录；失败时查看仓库根目录 `service.log`。
+
+## 跨平台 Web 版（推荐）
+
+用本地 Web UI 取代 Qt 界面：样式完全可控、三大平台一致、无需安装客户端。
+
+```bash
+python3 -m webui.server          # 自动打开浏览器（仅监听 127.0.0.1）
+bash scripts/run_web.sh --port 8899 --no-browser
+```
+
+![Web UI](docs/webui.png)
+
+功能：43 种目标格式、拖拽/文件夹批量、目标体积压缩、分辨率/帧率/码率/编码器、并行 1–8、
+PDF 合并/拆分/转图片/表格转 Excel/图片转 PDF/ZIP 打包、引擎状态（FFmpeg / LibreOffice / OCR）。
+
+后端：`webui/server.py`；前端：`webui/static/`（原生 HTML/CSS/JS，无构建步骤）。
 
 ## 功能
 
@@ -65,17 +96,34 @@
 - 视频 → 图片：**截取第一帧**（例如 MP4 → JPG 生成封面图）。
 - 图片 → 视频：出于格式语义，仅允许输出 GIF（单帧动图）；其他视频格式会提示「图片只能转换为图片格式或 GIF」。
 
-## 下载
+## 下载（v1.5.0）
 
-- 最新版本：<https://github.com/Inkpaper-mz/AnyConvert/releases/latest>
-- 1.2.0 通用版（Intel + Apple 芯片）：[AnyConvert-1.2.0-macOS-universal.dmg](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.2.0/AnyConvert-1.2.0-macOS-universal.dmg)
+| 平台 | 文件 | 说明 |
+| --- | --- | --- |
+| macOS（Intel + Apple 芯片） | [AnyConvert-1.5.0-macOS-universal.dmg](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-macOS-universal.dmg) | 原生 App，拖入即用 |
+| Windows / Linux | [AnyConvert-1.5.0-crossplatform.zip](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-crossplatform.zip) | 免安装，需要 Python 3.10+，本地 Web UI |
+
+发布页：<https://github.com/Inkpaper-mz/AnyConvert/releases/tag/v1.5.0>
 
 ## 安装
 
-1. 打开 DMG，把 **万能转码.app** 拖到「应用程序」文件夹；
-2. 双击运行。
+### macOS
 
-> 本应用使用本地 ad-hoc 签名。若系统提示「无法验证开发者」，请在 Finder 中 **右键 → 打开** 一次即可（之后正常双击）。
+1. 打开 DMG，把 **万能转码.app** 拖到「应用程序」；
+2. 双击运行（本地 ad-hoc 签名，首次被拦截时右键 → 打开一次即可）。
+
+### Windows / Linux
+
+1. 解压 `AnyConvert-1.5.0-crossplatform.zip`；
+2. 安装 Python 3.10+（Windows 勾选 Add to PATH）；
+3. `python -m pip install -r crossplatform/requirements.txt`；
+4. 准备引擎（三选一）：
+   - `python scripts/fetch_engines.py --all`（自动下载 LibreOffice，Linux 也支持）
+   - 使用系统已装的 FFmpeg / LibreOffice
+   - 把引擎放进 `crossplatform/vendor/`
+5. 启动：Windows 双击 `启动-Windows.bat`；Linux `bash 启动-Linux.sh`；macOS 双击 `启动-macOS.command`。
+
+浏览器会自动打开本地界面（仅监听 127.0.0.1）。
 
 ## 使用
 
