@@ -68,9 +68,10 @@ enum L10n {
         for identifier in Locale.preferredLanguages {
             let value = identifier.lowercased()
             if value.hasPrefix("zh") {
-                if value.contains("hant") || value.contains("tw") || value.contains("hk") || value.contains("mo") {
-                    return .zhHant
-                }
+                // 脚本子标签优先于地区：zh-Hans-TW 是简体，不能因为 TW 判成繁体
+                if value.contains("hans") { return .zhHans }
+                if value.contains("hant") { return .zhHant }
+                if value.contains("-tw") || value.contains("-hk") || value.contains("-mo") { return .zhHant }
                 return .zhHans
             }
             if value.hasPrefix("ja") { return .ja }

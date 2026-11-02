@@ -3,6 +3,7 @@ import Foundation
 /// 转换预设：一组「目标格式 + 画质 + 分辨率 + 码率 + 额外参数」的快照。
 /// 参考 File Converter 的 ConversionPreset / ConversionPresetTemplates。
 struct ConversionPreset: Codable, Identifiable, Equatable {
+
     var id: String
     var nameKey: String?        // 内置预设的本地化 key
     var name: String?           // 自定义预设的名称

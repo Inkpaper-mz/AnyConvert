@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 
 func acLog(_ message: String) {
     guard ProcessInfo.processInfo.environment["ANYCONVERT_DEBUG"] != nil else { return }
@@ -22,6 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         L10n.bootstrap()
+        AppModel.shared.bootstrap()
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()
     }
@@ -29,7 +31,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         buildMainMenu()
 
-        let root = RootView(frame: NSRect(x: 0, y: 0, width: 1060, height: 720))
+        let content: NSView
+        if CommandLine.arguments.contains("--appkit") {
+            content = RootView(frame: NSRect(x: 0, y: 0, width: 1060, height: 720))
+        } else {
+            let host = NSHostingView(rootView: SwiftUIRootView(model: AppModel.shared))
+            host.frame = NSRect(x: 0, y: 0, width: 1060, height: 720)
+            content = host
+        }
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1060, height: 720),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
@@ -40,7 +49,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.minSize = NSSize(width: 960, height: 640)
-        window.contentView = root
+        window.contentView = content
         window.center()
         window.setFrameAutosaveName("AnyConvertMainWindow")
         window.makeKeyAndOrderFront(nil)
@@ -110,7 +119,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let formatIndex = args.firstIndex(of: "--format"), formatIndex + 1 < args.count {
             let formatID = args[formatIndex + 1]
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                MainActor.assumeIsolated { AppModel.shared.setFormat(formatID) }
+                MainActor.assumeIsolated {
+                    AppModel.shared.setFormat(formatID)
+                    AppModel.shared.ensureValidFormat()
+                }
             }
         }
 
