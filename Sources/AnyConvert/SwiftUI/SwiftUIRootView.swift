@@ -95,6 +95,25 @@ struct SwiftUIRootView: View {
                     .pickerStyle(.menu)
                 }
 
+                if !model.docEngineReady {
+                    section("文档引擎") {
+                        if model.docInstalling {
+                            ProgressView(value: model.docInstallProgress)
+                            Text(model.docInstallMessage)
+                                .font(.system(size: 10)).foregroundColor(.secondary)
+                        } else {
+                            Button("下载文档引擎（清华镜像）") { model.installDocumentEngine() }
+                                .controlSize(.small)
+                            Text("文档 / 表格 / 演示转换需要 LibreOffice，约 300 MB")
+                                .font(.system(size: 10)).foregroundColor(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                } else if model.currentFormat.kind == .document {
+                    Text("LibreOffice 已就绪")
+                        .font(.system(size: 10)).foregroundColor(.green)
+                }
+
                 if model.currentFormat.kind != .document {
                 section(L10n.t("settings.quality")) {
                     Picker("", selection: bind({ model.quality }, { model.setQuality($0) })) {

@@ -63,6 +63,11 @@ body {
 .pill.off { color: #9a9aa6; background: #f0f1f6; }
 .pill.off i { background: #c2c4d2; }
 .top-actions { margin-left: auto; display: flex; gap: 8px; }
+.engine-install {
+  font-size: 11px; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid #dfe5ff; background: #eef1ff; color: #4a5bd0;
+}
+.engine-install:disabled { opacity: 0.7; }
 
 /* ---------- 布局 ---------- */
 .layout {

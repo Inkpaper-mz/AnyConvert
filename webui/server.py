@@ -27,6 +27,7 @@ if ROOT not in sys.path:
 from crossplatform.core import engines, pdf_tools  # noqa: E402
 from crossplatform.core.matrix import MATRIX  # noqa: E402
 from crossplatform.core.queue import ConversionQueue  # noqa: E402
+from webui import installer  # noqa: E402
 
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
@@ -137,6 +138,9 @@ class Handler(BaseHTTPRequestHandler):
                 "max_workers": STATE.queue.max_workers,
             })
             return
+        if path == "/api/install-status":
+            self._json({"ok": True, **installer.STATE})
+            return
         if path == "/api/jobs":
             self._json({"ok": True, **jobs_payload()})
             return
@@ -181,6 +185,10 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/cancel":
                 STATE.queue.cancel()
                 self._json({"ok": True})
+                return
+            if path == "/api/install-libreoffice":
+                installer.ensure_async()
+                self._json({"ok": True, **installer.STATE})
                 return
             if path == "/api/workers":
                 data = json.loads(self._body() or b"{}")

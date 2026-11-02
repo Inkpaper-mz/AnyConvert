@@ -24,7 +24,7 @@ COMMON = [
     "crossplatform/core/matrix.py", "crossplatform/core/queue.py",
     "crossplatform/core/engines.py", "crossplatform/core/compress.py",
     "crossplatform/core/pdf_tools.py", "crossplatform/core/ocr.py",
-    "webui/__init__.py", "webui/server.py",
+    "webui/__init__.py", "webui/server.py", "webui/installer.py",
     "webui/static/index.html", "webui/static/app.css", "webui/static/app.js",
     "scripts/fetch_engines.py", "scripts/install_context_menu.py",
     "scripts/run_web.sh", "scripts/fetch_ffmpeg.sh",

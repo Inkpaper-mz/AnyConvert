@@ -8,6 +8,7 @@ const S = {
   workers: 3,
   jobs: [],
   uploading: 0,
+  installState: null,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -45,6 +46,10 @@ async function init() {
   selectTarget(S.groups[S.category][0]);
   bindEvents();
   syncOptionsUI();
+  api("/api/install-status").then((data) => {
+    S.installState = data;
+    if (data.state === "running") pollInstall();
+  });
   poll();
   setInterval(poll, 700);
 }
@@ -60,7 +65,44 @@ function renderEngines() {
     pill.innerHTML = `<i></i>${label}${info.bundled ? " · 自带" : ""}`;
     pill.title = info.path || "未就绪";
     box.appendChild(pill);
+    if (key === "libreoffice" && !info.available) {
+      const button = document.createElement("button");
+      button.className = "engine-install";
+      const running = S.installState && S.installState.state === "running";
+      button.textContent = running
+        ? `安装中 ${Math.round((S.installState.progress || 0) * 100)}%`
+        : "安装文档引擎";
+      button.disabled = running;
+      button.onclick = startEngineInstall;
+      box.appendChild(button);
+    }
   }
+}
+
+async function startEngineInstall() {
+  await api("/api/install-libreoffice", { method: "POST" });
+  pollInstall();
+}
+
+function pollInstall() {
+  api("/api/install-status").then((data) => {
+    S.installState = data;
+    renderEngines();
+    if (data.state === "running") {
+      setTimeout(pollInstall, 1000);
+    } else if (data.state === "done") {
+      toast("LibreOffice 已安装，文档转换可用", "ok");
+      refreshEngines();
+    } else if (data.state === "failed") {
+      toast(`安装失败：${data.message}`, "error");
+    }
+  });
+}
+
+async function refreshEngines() {
+  const state = await api("/api/state");
+  S.engines = state.engines;
+  renderEngines();
 }
 
 function renderCats() {

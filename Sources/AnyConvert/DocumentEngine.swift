@@ -109,6 +109,12 @@ enum DocumentEngine {
 
     // MARK: - LibreOffice
 
+    static var installedSofficePath: String {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Application Support/AnyConvert/LibreOffice.app/Contents/MacOS/soffice")
+            .path
+    }
+
     static func findSoffice() -> URL? {
         var candidates: [URL] = []
         if let env = ProcessInfo.processInfo.environment["SOFFICE"] {
@@ -118,6 +124,7 @@ enum DocumentEngine {
             candidates.append(resources.appendingPathComponent("LibreOffice.app/Contents/MacOS/soffice"))
         }
         candidates.append(URL(fileURLWithPath: "/Applications/LibreOffice.app/Contents/MacOS/soffice"))
+        candidates.append(URL(fileURLWithPath: installedSofficePath))
         candidates.append(URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             .appendingPathComponent("crossplatform/vendor/LibreOffice.app/Contents/MacOS/soffice"))
         return candidates.first { FileManager.default.isExecutableFile(atPath: $0.path) }

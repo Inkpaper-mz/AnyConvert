@@ -38,6 +38,44 @@ final class AppModel {
     private(set) var extraArguments: [String] = []
     private(set) var targetSizeMB: Double?
     private(set) var allowDownscale = true
+    private(set) var docInstalling = false
+    private(set) var docInstallProgress = 0.0
+    private(set) var docInstallMessage = ""
+
+    var docEngineReady: Bool { DocumentEngine.findSoffice() != nil }
+
+    func installDocumentEngine() {
+        guard !docInstalling else { return }
+        docInstalling = true
+        docInstallProgress = 0
+        docInstallMessage = "准备下载…"
+        observer?.modelSettingsDidChange(self)
+        Task {
+            do {
+                try await EngineInstaller.install { [weak self] progress, message in
+                    Task { @MainActor in
+                        self?.docInstallProgress = progress
+                        self?.docInstallMessage = message
+                        self?.observer?.modelSettingsDidChange(self!)
+                    }
+                }
+                await MainActor.run {
+                    self.docInstalling = false
+                    self.docInstallProgress = 1
+                    self.docInstallMessage = "已就绪"
+                    self.observer?.modelSettingsDidChange(self)
+                    self.observer?.modelDidProduceMessage(self, message: "LibreOffice 安装完成")
+                }
+            } catch {
+                await MainActor.run {
+                    self.docInstalling = false
+                    self.docInstallMessage = error.localizedDescription
+                    self.observer?.modelSettingsDidChange(self)
+                    self.observer?.modelDidProduceMessage(self, message: error.localizedDescription)
+                }
+            }
+        }
+    }
 
     private let engine = Engine.shared
     private let defaults = UserDefaults.standard
