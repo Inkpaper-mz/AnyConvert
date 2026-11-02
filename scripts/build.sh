@@ -61,8 +61,9 @@ for arch in $ARCHS; do
 done
 
 echo "==> 签名（ad-hoc）"
-xattr -cr "$BUNDLE"
-codesign --force --sign - "$BUNDLE"
+dot_clean -m "$BUNDLE" 2>/dev/null || true
+xattr -cr "$BUNDLE" 2>/dev/null || true
+codesign --force --deep --sign - "$BUNDLE"
 if codesign --verify --deep --strict "$BUNDLE" 2>/dev/null; then
     echo "    签名校验通过"
 else
