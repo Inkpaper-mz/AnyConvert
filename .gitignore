@@ -1,0 +1,19 @@
+# 构建产物
+.build/
+build/
+dist/
+*.dmg
+*.app
+
+# 依赖与二进制（用 scripts/fetch_ffmpeg.sh 下载）
+vendor/
+
+# 系统文件
+.DS_Store
+*.swp
+
+# 文档截图需要保留
+!docs/*.png
+
+# 推送 CI 工作流需要 token 具备 workflow 权限；授权后删除下面一行即可
+.github/workflows/
