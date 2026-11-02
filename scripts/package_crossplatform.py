@@ -8,7 +8,7 @@ import sys
 import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSION = "1.5.0"
+VERSION = "1.5.1"
 OUT = os.path.join(ROOT, "dist", f"AnyConvert-{VERSION}-crossplatform.zip")
 PREFIX = f"AnyConvert-{VERSION}"
 
