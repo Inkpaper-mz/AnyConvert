@@ -101,7 +101,7 @@ PDF 合并/拆分/转图片/表格转 Excel/图片转 PDF/ZIP 打包、引擎状
 | 平台 | 文件 | 说明 |
 | --- | --- | --- |
 | macOS（推荐，Web UI） | [AnyConvert-1.5.0-macOS-web.zip](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-macOS-web.zip) | 解压双击 .app，首次运行安装脚本 |
-| Windows | [AnyConvert-1.5.0-Windows-x64.zip](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-Windows-x64.zip) | Python 3.10+，双击 安装依赖.bat |
+| Windows | [AnyConvert-1.5.0-Windows-x64-Setup.exe](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-Windows-x64-Setup.exe) | **exe 安装包**，内置 Python 运行时与 FFmpeg |
 | Linux | [AnyConvert-1.5.0-Linux-x64.tar.gz](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-Linux-x64.tar.gz) | Python 3.10+，`bash install.sh` |
 | macOS 原生版（可选） | [AnyConvert-1.5.0-macOS-universal.dmg](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-macOS-universal.dmg) | 32 种音视频/图片格式，无文档与 PDF 工具 |
 
@@ -116,12 +116,17 @@ PDF 合并/拆分/转图片/表格转 Excel/图片转 PDF/ZIP 打包、引擎状
 3. 双击 **万能转码.app**，浏览器自动打开本地界面；
 4. 首次被系统拦截时：右键 .app → 打开。
 
-### Windows / Linux
+### Windows
 
-1. 解压对应包；
-2. 安装 Python 3.10+（Windows 勾选 Add to PATH）；
-3. Windows 双击 `安装依赖.bat`；Linux 执行 `bash install.sh`；
-4. 启动：Windows 双击 `启动-Windows.bat`；Linux `bash 启动-Linux.sh`。
+1. 双击 `AnyConvert-1.5.0-Windows-x64-Setup.exe`，按向导安装；
+2. 从开始菜单 / 桌面启动「万能转码」；
+3. 文档转换需另装 LibreOffice；PDF / 图片 / 音视频开箱即用。
+
+### Linux
+
+1. 解压 `AnyConvert-1.5.0-Linux-x64.tar.gz`；
+2. 安装 Python 3.10+，执行 `bash install.sh`；
+3. `bash 启动-Linux.sh` 启动。
 
 ### macOS 原生版（可选）
 

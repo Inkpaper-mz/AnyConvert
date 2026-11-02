@@ -73,8 +73,9 @@ enum SelfTest {
         print("素材：\(info.width)×\(info.height) · \(String(format: "%.2f", info.duration))s · video=\(info.hasVideo) audio=\(info.hasAudio)")
 
         // 2. 校验：所有格式都能生成完整参数
+        let mediaFormats = Catalog.all.filter { $0.kind != .document }
         var argFailures = 0
-        for format in Catalog.all {
+        for format in mediaFormats {
             let output = workDir.appendingPathComponent("check.\(format.ext)")
             let settings = ConversionSettings(format: format, quality: .balanced, resolution: .original, audioBitrate: .b192, hardware: false)
             let args = CommandBuilder.arguments(settings: settings, input: sample, output: output, info: info)
@@ -84,10 +85,10 @@ enum SelfTest {
                 print("✗ 参数异常：\(format.id)")
             }
         }
-        print("参数生成：\(Catalog.all.count) 种格式，失败 \(argFailures)")
+        print("参数生成：\(mediaFormats.count) 种媒体格式，失败 \(argFailures)（文档格式由 LibreOffice/PDFKit 处理，单独校验）")
 
         // 3. 真实转码
-        let targets = Catalog.all.map(\.id)
+        let targets = mediaFormats.map(\.id)
         var failures: [String] = []
         var timings: [(String, Double, Int64)] = []
 
