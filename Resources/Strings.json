@@ -165,7 +165,8 @@
     "preset.gif": "表情包 GIF",
     "preset.webm": "网页视频 · WebM",
     "preset.podcast": "播客音频 · M4A",
-    "preset.none": "自定义设置"
+    "preset.none": "自定义设置",
+    "status.unknown": "无法估算"
   },
   "zh-Hant": {
     "app.title": "萬能轉碼",
@@ -333,7 +334,8 @@
     "preset.gif": "貼圖 GIF",
     "preset.webm": "網頁影片 · WebM",
     "preset.podcast": "播客音訊 · M4A",
-    "preset.none": "自訂設定"
+    "preset.none": "自訂設定",
+    "status.unknown": "無法估算"
   },
   "en": {
     "app.title": "AnyConvert",
@@ -501,7 +503,8 @@
     "preset.gif": "Sticker GIF",
     "preset.webm": "Web video · WebM",
     "preset.podcast": "Podcast · M4A",
-    "preset.none": "Custom"
+    "preset.none": "Custom",
+    "status.unknown": "Estimating…"
   },
   "ja": {
     "app.title": "万能変換",
@@ -669,7 +672,8 @@
     "preset.gif": "スタンプ GIF",
     "preset.webm": "Web 動画 · WebM",
     "preset.podcast": "ポッドキャスト · M4A",
-    "preset.none": "カスタム"
+    "preset.none": "カスタム",
+    "status.unknown": "推定不可"
   },
   "ko": {
     "app.title": "만능 변환",
@@ -837,7 +841,8 @@
     "preset.gif": "스티커 GIF",
     "preset.webm": "웹 비디오 · WebM",
     "preset.podcast": "팟캐스트 · M4A",
-    "preset.none": "사용자 설정"
+    "preset.none": "사용자 설정",
+    "status.unknown": "계산 불가"
   },
   "fr": {
     "app.title": "AnyConvert",
@@ -1005,6 +1010,7 @@
     "preset.gif": "GIF sticker",
     "preset.webm": "Vidéo web · WebM",
     "preset.podcast": "Podcast · M4A",
-    "preset.none": "Personnalisé"
+    "preset.none": "Personnalisé",
+    "status.unknown": "Non estimable"
   }
 }

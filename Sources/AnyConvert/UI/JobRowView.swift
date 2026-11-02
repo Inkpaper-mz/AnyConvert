@@ -196,8 +196,10 @@ final class JobRowView: CardView {
             show(progress: true, message: nil)
             progressBar.progress = job.progress
             let hasDuration = (job.info?.duration ?? 0) > 0
-            percentLabel.isHidden = !hasDuration
-            percentLabel.stringValue = hasDuration ? "\(Int((job.progress * 100).rounded()))%" : ""
+            percentLabel.isHidden = false
+            percentLabel.stringValue = hasDuration
+                ? "\(Int((job.progress * 100).rounded()))%"
+                : L10n.t("status.unknown")
             var extras: [String] = []
             if !job.speed.isEmpty { extras.append(job.speed) }
             if job.elapsed >= 1 { extras.append(String(format: "%.0fs", job.elapsed)) }

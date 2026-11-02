@@ -2,6 +2,10 @@ import AppKit
 
 let arguments = CommandLine.arguments
 
+if arguments.contains("--cli") {
+    exit(CLI.run(arguments))
+}
+
 if arguments.contains("--selftest") {
     let ok = SelfTest.run()
     exit(ok ? 0 : 1)

@@ -114,24 +114,29 @@ final class AppModel {
         guard formatID != id else { return }
         formatID = id
         defaults.set(id, forKey: Keys.format)
-        if let ext = pendingSourceExtension() {
+        for ext in pendingSourceExtensions() {
             defaults.set(id, forKey: "ac.target.\(ext)")
         }
         observer?.modelSettingsDidChange(self)
     }
 
-    /// 当前待转换文件的源扩展名（用于「按源格式记住目标格式」）
-    private func pendingSourceExtension() -> String? {
-        let pending = jobs.first {
-            $0.status == .waiting || $0.status == .failed || $0.status == .cancelled
+    /// 当前待转换文件的源扩展名集合（用于「按源格式记住目标格式」）
+    private func pendingSourceExtensions() -> Set<String> {
+        var result: Set<String> = []
+        for job in jobs where job.status == .waiting || job.status == .failed || job.status == .cancelled {
+            let ext = job.url.pathExtension.lowercased()
+            if !ext.isEmpty { result.insert(ext) }
         }
-        return pending?.url.pathExtension.lowercased()
+        return result
     }
 
     /// 恢复该源扩展名上次选择的目标格式（仅在列表原本为空时调用）
+    /// 仅当所有待转换文件属于同一扩展名、且记住的目标仍可用时才恢复，避免混合批量误用
     private func restoreRememberedFormat(for extensionName: String) {
+        let extensions = pendingSourceExtensions()
+        guard extensions.count == 1, extensions.first == extensionName else { return }
         guard let remembered = defaults.string(forKey: "ac.target.\(extensionName)"),
-              Catalog.all.contains(where: { $0.id == remembered }),
+              availableFormats.contains(where: { $0.id == remembered }),
               remembered != formatID else { return }
         formatID = remembered
         observer?.modelSettingsDidChange(self)
@@ -185,7 +190,7 @@ final class AppModel {
         defaults.set(hardware, forKey: Keys.hardware)
         defaults.set(customWidth ?? 0, forKey: Keys.customWidth)
         defaults.set(customHeight ?? 0, forKey: Keys.customHeight)
-        if let ext = pendingSourceExtension() {
+        for ext in pendingSourceExtensions() {
             defaults.set(formatID, forKey: "ac.target.\(ext)")
         }
         observer?.modelSettingsDidChange(self)
