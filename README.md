@@ -101,9 +101,9 @@ PDF 合并/拆分/转图片/表格转 Excel/图片转 PDF/ZIP 打包、引擎状
 | 平台 | 文件 | 说明 |
 | --- | --- | --- |
 | macOS（推荐，Web UI） | [AnyConvert-1.5.0-macOS-web.zip](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-macOS-web.zip) | 解压双击 .app，首次运行安装脚本 |
-| Windows | [AnyConvert-1.5.0-Windows-x64-Setup.exe](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-Windows-x64-Setup.exe) | **exe 安装包**，内置 Python 运行时与 FFmpeg |
+| Windows | [AnyConvert-1.5.0-Windows-x64-Setup.exe](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-Windows-x64-Setup.exe) | **exe 安装包**，内置 Python、FFmpeg、LibreOffice |
 | Linux | [AnyConvert-1.5.0-Linux-x64.tar.gz](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-Linux-x64.tar.gz) | Python 3.10+，`bash install.sh` |
-| macOS 原生版（可选） | [AnyConvert-1.5.0-macOS-universal.dmg](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-macOS-universal.dmg) | 32 种音视频/图片格式，无文档与 PDF 工具 |
+| macOS 原生版（可选） | [AnyConvert-1.5.0-macOS-universal.dmg](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-macOS-universal.dmg) | SwiftUI 原生界面，内置 LibreOffice，文档 / PDF / OCR 开箱即用 |
 
 发布页：<https://github.com/Inkpaper-mz/AnyConvert/releases/tag/v1.5.0>
 

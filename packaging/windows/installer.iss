@@ -18,7 +18,7 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayIcon={app}\{#MyAppExeName}
-PrivilegesRequired=lowest
+PrivilegesRequired=admin
 
 [Languages]
 Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
@@ -29,10 +29,12 @@ Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: 
 
 [Files]
 Source: "Z:\Users\inkpaper\Documents\deepseek-harness\default-workspace\AnyConvert\dist\AnyConvert\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "Z:\Users\inkpaper\Documents\deepseek-harness\default-workspace\AnyConvert\packaging\windows\LibreOffice.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Icons]
 Name: "{autoprograms}\万能转码"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\万能转码"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\LibreOffice.msi"" /qn /norestart"; StatusMsg: "正在安装 LibreOffice（文档引擎，约 1-2 分钟）"; Flags: runhidden waituntilterminated
 Filename: "{app}\{#MyAppExeName}"; Description: "启动万能转码"; Flags: nowait postinstall skipifsilent
