@@ -2,12 +2,10 @@
   "zh-Hans": {
     "app.title": "万能转码",
     "app.tagline": "视频 · 音频 · 动图 任意互转 · 全部由 FFmpeg 解码",
-
     "drop.title": "把文件拖到这里",
     "drop.subtitle": "支持 MP4、MKV、MOV、AVI、MP3、FLAC、WAV、M4A、JPG、PNG 等几乎所有格式",
     "drop.continue": "继续拖入文件，或",
     "drop.files": "%d 个文件",
-
     "btn.chooseFiles": "选择文件",
     "btn.chooseFolder": "选择文件夹",
     "btn.start": "开始转换",
@@ -19,7 +17,6 @@
     "btn.ok": "知道了",
     "btn.restart": "立即重新启动",
     "btn.later": "稍后",
-
     "settings.format": "输出格式",
     "settings.quality": "画质",
     "settings.resolution": "分辨率",
@@ -36,14 +33,12 @@
     "settings.hwVideoOnly": "仅视频格式可用",
     "settings.width": "宽",
     "settings.height": "高",
-
     "quality.high": "高质量",
     "quality.high.detail": "接近原片，文件较大",
     "quality.balanced": "标准",
     "quality.balanced.detail": "画质与体积均衡",
     "quality.small": "小体积",
     "quality.small.detail": "适合分享与传输",
-
     "res.original": "保持原始",
     "res.4k": "4K",
     "res.1080": "1080p",
@@ -51,7 +46,6 @@
     "res.480": "480p",
     "res.360": "360p",
     "res.custom": "自定义…",
-
     "status.waiting": "等待",
     "status.probing": "分析中",
     "status.running": "转换中",
@@ -62,14 +56,11 @@
     "status.audio": "音频",
     "status.image": "图片",
     "status.noFiles": "还没有文件",
-
     "footer.summary": "共 %d 个文件 · 已完成 %d 个",
     "footer.running": "正在转换 %d 个 · 已完成 %d/%d",
-
     "group.video": "视频",
     "group.audio": "音频",
     "group.image": "图片",
-
     "menu.file": "文件",
     "menu.edit": "编辑",
     "menu.convert": "转换",
@@ -96,7 +87,6 @@
     "menu.minimize": "最小化",
     "menu.zoom": "缩放",
     "menu.followSystem": "跟随系统",
-
     "lang.zhHans": "简体中文",
     "lang.zhHant": "繁體中文",
     "lang.en": "English",
@@ -106,10 +96,8 @@
     "lang.system": "跟随系统",
     "lang.restartTitle": "需要重新启动",
     "lang.restartBody": "切换语言后，需要重新打开「万能转码」才能生效。",
-
-    "about.title": "万能转码 1.1",
+    "about.title": "万能转码 1.2",
     "about.body": "基于 FFmpeg 的视频 / 音频 / 图片格式转换工具，支持 32 种输出格式与几乎所有输入格式。\n\n交互界面：MIT License\n转码引擎：FFmpeg（GPL v3）",
-
     "msg.title": "提示",
     "msg.noMedia": "没有找到可用的音视频或图片文件。",
     "msg.duplicate": "这些文件已经在列表里了。",
@@ -128,11 +116,9 @@
     "msg.probeOutput": "输出格式异常",
     "msg.noTracks": "没有可转换的音轨或视频轨",
     "msg.hwFallback": "硬件编码不可用，已自动改用软件编码",
-
     "row.reveal": "在 Finder 中显示",
     "row.retry": "重新转换",
     "row.remove": "从列表移除",
-
     "fmt.mp4.sub": "H.264 + AAC · 最通用",
     "fmt.mov.sub": "H.264 + AAC · 苹果",
     "fmt.m4v.sub": "H.264 + AAC · iTunes",
@@ -164,18 +150,30 @@
     "fmt.avif.sub": "新一代 · 高压缩",
     "fmt.tiff.sub": "印刷 · 无损",
     "fmt.bmp.sub": "位图 · 无压缩",
-    "fmt.ico.sub": "图标 · Windows"
+    "fmt.ico.sub": "图标 · Windows",
+    "settings.incompatible": "部分格式与当前文件不兼容，已自动禁用",
+    "row.elapsed": "用时 %@",
+    "preset.title": "预设",
+    "preset.save": "保存为预设…",
+    "preset.delete": "删除",
+    "preset.custom": "自定义预设",
+    "preset.namePrompt": "给这套设置起个名字",
+    "preset.namePlaceholder": "例如：微信小视频",
+    "preset.wechat": "微信分享 · 720p",
+    "preset.archive": "高画质归档 · 1080p",
+    "preset.audio": "只要音频 · MP3",
+    "preset.gif": "表情包 GIF",
+    "preset.webm": "网页视频 · WebM",
+    "preset.podcast": "播客音频 · M4A",
+    "preset.none": "自定义设置"
   },
-
   "zh-Hant": {
     "app.title": "萬能轉碼",
     "app.tagline": "影片 · 音訊 · 動圖 任意互轉 · 全部由 FFmpeg 解碼",
-
     "drop.title": "把檔案拖到這裡",
     "drop.subtitle": "支援 MP4、MKV、MOV、AVI、MP3、FLAC、WAV、M4A、JPG、PNG 等幾乎所有格式",
     "drop.continue": "繼續拖入檔案，或",
     "drop.files": "%d 個檔案",
-
     "btn.chooseFiles": "選擇檔案",
     "btn.chooseFolder": "選擇資料夾",
     "btn.start": "開始轉換",
@@ -187,7 +185,6 @@
     "btn.ok": "知道了",
     "btn.restart": "立即重新啟動",
     "btn.later": "稍後",
-
     "settings.format": "輸出格式",
     "settings.quality": "畫質",
     "settings.resolution": "解析度",
@@ -204,14 +201,12 @@
     "settings.hwVideoOnly": "僅影片格式可用",
     "settings.width": "寬",
     "settings.height": "高",
-
     "quality.high": "高畫質",
     "quality.high.detail": "接近原片，檔案較大",
     "quality.balanced": "標準",
     "quality.balanced.detail": "畫質與容量均衡",
     "quality.small": "小容量",
     "quality.small.detail": "適合分享與傳輸",
-
     "res.original": "保持原始",
     "res.4k": "4K",
     "res.1080": "1080p",
@@ -219,7 +214,6 @@
     "res.480": "480p",
     "res.360": "360p",
     "res.custom": "自訂…",
-
     "status.waiting": "等待",
     "status.probing": "分析中",
     "status.running": "轉換中",
@@ -230,14 +224,11 @@
     "status.audio": "音訊",
     "status.image": "圖片",
     "status.noFiles": "還沒有檔案",
-
     "footer.summary": "共 %d 個檔案 · 已完成 %d 個",
     "footer.running": "正在轉換 %d 個 · 已完成 %d/%d",
-
     "group.video": "影片",
     "group.audio": "音訊",
     "group.image": "圖片",
-
     "menu.file": "檔案",
     "menu.edit": "編輯",
     "menu.convert": "轉換",
@@ -264,7 +255,6 @@
     "menu.minimize": "縮到最小",
     "menu.zoom": "縮放",
     "menu.followSystem": "跟隨系統",
-
     "lang.zhHans": "简体中文",
     "lang.zhHant": "繁體中文",
     "lang.en": "English",
@@ -274,10 +264,8 @@
     "lang.system": "跟隨系統",
     "lang.restartTitle": "需要重新啟動",
     "lang.restartBody": "切換語言後，需要重新開啟「萬能轉碼」才能生效。",
-
-    "about.title": "萬能轉碼 1.1",
+    "about.title": "萬能轉碼 1.2",
     "about.body": "以 FFmpeg 為核心的影片 / 音訊 / 圖片格式轉換工具，支援 32 種輸出格式與幾乎所有輸入格式。\n\n介面：MIT License\n轉碼引擎：FFmpeg（GPL v3）",
-
     "msg.title": "提示",
     "msg.noMedia": "沒有找到可用的影音或圖片檔案。",
     "msg.duplicate": "這些檔案已經在列表裡了。",
@@ -296,11 +284,9 @@
     "msg.probeOutput": "輸出格式異常",
     "msg.noTracks": "沒有可轉換的音軌或視訊軌",
     "msg.hwFallback": "硬體編碼不可用，已自動改用軟體編碼",
-
     "row.reveal": "在 Finder 中顯示",
     "row.retry": "重新轉換",
     "row.remove": "從列表移除",
-
     "fmt.mp4.sub": "H.264 + AAC · 最通用",
     "fmt.mov.sub": "H.264 + AAC · Apple",
     "fmt.m4v.sub": "H.264 + AAC · iTunes",
@@ -332,18 +318,30 @@
     "fmt.avif.sub": "新世代 · 高壓縮",
     "fmt.tiff.sub": "印刷 · 無損",
     "fmt.bmp.sub": "點陣圖 · 無壓縮",
-    "fmt.ico.sub": "圖示 · Windows"
+    "fmt.ico.sub": "圖示 · Windows",
+    "settings.incompatible": "部分格式與目前檔案不相容，已自動停用",
+    "row.elapsed": "耗時 %@",
+    "preset.title": "預設",
+    "preset.save": "儲存為預設…",
+    "preset.delete": "刪除",
+    "preset.custom": "自訂預設",
+    "preset.namePrompt": "為這組設定命名",
+    "preset.namePlaceholder": "例如：LINE 分享",
+    "preset.wechat": "微信分享 · 720p",
+    "preset.archive": "高畫質封存 · 1080p",
+    "preset.audio": "只要音訊 · MP3",
+    "preset.gif": "貼圖 GIF",
+    "preset.webm": "網頁影片 · WebM",
+    "preset.podcast": "播客音訊 · M4A",
+    "preset.none": "自訂設定"
   },
-
   "en": {
     "app.title": "AnyConvert",
     "app.tagline": "Video · audio · GIF — convert anything, powered by FFmpeg",
-
     "drop.title": "Drop your files here",
     "drop.subtitle": "MP4, MKV, MOV, AVI, MP3, FLAC, WAV, M4A, JPG, PNG and almost any format",
     "drop.continue": "Add more files, or",
     "drop.files": "%d files",
-
     "btn.chooseFiles": "Choose Files",
     "btn.chooseFolder": "Choose Folder",
     "btn.start": "Start",
@@ -355,7 +353,6 @@
     "btn.ok": "OK",
     "btn.restart": "Restart Now",
     "btn.later": "Later",
-
     "settings.format": "Output format",
     "settings.quality": "Quality",
     "settings.resolution": "Resolution",
@@ -372,14 +369,12 @@
     "settings.hwVideoOnly": "Video formats only",
     "settings.width": "W",
     "settings.height": "H",
-
     "quality.high": "High",
     "quality.high.detail": "Near-original quality, larger files",
     "quality.balanced": "Balanced",
     "quality.balanced.detail": "Good quality and size",
     "quality.small": "Small",
     "quality.small.detail": "Great for sharing",
-
     "res.original": "Keep original",
     "res.4k": "4K",
     "res.1080": "1080p",
@@ -387,7 +382,6 @@
     "res.480": "480p",
     "res.360": "360p",
     "res.custom": "Custom…",
-
     "status.waiting": "Waiting",
     "status.probing": "Analyzing",
     "status.running": "Converting",
@@ -398,14 +392,11 @@
     "status.audio": "Audio",
     "status.image": "Image",
     "status.noFiles": "No files yet",
-
     "footer.summary": "%d files · %d done",
     "footer.running": "%d converting · %d/%d done",
-
     "group.video": "Video",
     "group.audio": "Audio",
     "group.image": "Images",
-
     "menu.file": "File",
     "menu.edit": "Edit",
     "menu.convert": "Convert",
@@ -432,7 +423,6 @@
     "menu.minimize": "Minimize",
     "menu.zoom": "Zoom",
     "menu.followSystem": "System Default",
-
     "lang.zhHans": "简体中文",
     "lang.zhHant": "繁體中文",
     "lang.en": "English",
@@ -442,10 +432,8 @@
     "lang.system": "System Default",
     "lang.restartTitle": "Restart required",
     "lang.restartBody": "Reopen AnyConvert to apply the new language.",
-
-    "about.title": "AnyConvert 1.1",
+    "about.title": "AnyConvert 1.2",
     "about.body": "A video / audio / image converter powered by FFmpeg. 32 output formats, almost any input.\n\nUI: MIT License\nEngine: FFmpeg (GPL v3)",
-
     "msg.title": "Notice",
     "msg.noMedia": "No media or image files were found.",
     "msg.duplicate": "Those files are already in the list.",
@@ -464,11 +452,9 @@
     "msg.probeOutput": "Unexpected probe output",
     "msg.noTracks": "No audio or video track to convert",
     "msg.hwFallback": "Hardware encoding failed — using software encoding",
-
     "row.reveal": "Show in Finder",
     "row.retry": "Convert Again",
     "row.remove": "Remove from List",
-
     "fmt.mp4.sub": "H.264 + AAC · Most compatible",
     "fmt.mov.sub": "H.264 + AAC · Apple",
     "fmt.m4v.sub": "H.264 + AAC · iTunes",
@@ -500,18 +486,30 @@
     "fmt.avif.sub": "Next-gen · high compression",
     "fmt.tiff.sub": "Print · lossless",
     "fmt.bmp.sub": "Bitmap · uncompressed",
-    "fmt.ico.sub": "Icon · Windows"
+    "fmt.ico.sub": "Icon · Windows",
+    "settings.incompatible": "Some formats are unavailable for the selected files",
+    "row.elapsed": "took %@",
+    "preset.title": "Presets",
+    "preset.save": "Save as Preset…",
+    "preset.delete": "Delete",
+    "preset.custom": "Custom preset",
+    "preset.namePrompt": "Name this configuration",
+    "preset.namePlaceholder": "e.g. Chat sharing",
+    "preset.wechat": "Chat share · 720p",
+    "preset.archive": "Archive · 1080p",
+    "preset.audio": "Audio only · MP3",
+    "preset.gif": "Sticker GIF",
+    "preset.webm": "Web video · WebM",
+    "preset.podcast": "Podcast · M4A",
+    "preset.none": "Custom"
   },
-
   "ja": {
     "app.title": "万能変換",
     "app.tagline": "動画 · 音声 · GIF を相互変換 · FFmpeg 搭載",
-
     "drop.title": "ファイルをここにドロップ",
     "drop.subtitle": "MP4、MKV、MOV、AVI、MP3、FLAC、WAV、M4A、JPG、PNG などほぼ全形式に対応",
     "drop.continue": "さらにファイルを追加、または",
     "drop.files": "%d 個のファイル",
-
     "btn.chooseFiles": "ファイルを選択",
     "btn.chooseFolder": "フォルダを選択",
     "btn.start": "変換開始",
@@ -523,7 +521,6 @@
     "btn.ok": "OK",
     "btn.restart": "今すぐ再起動",
     "btn.later": "あとで",
-
     "settings.format": "出力形式",
     "settings.quality": "画質",
     "settings.resolution": "解像度",
@@ -540,14 +537,12 @@
     "settings.hwVideoOnly": "動画形式のみ利用可能",
     "settings.width": "幅",
     "settings.height": "高さ",
-
     "quality.high": "高画質",
     "quality.high.detail": "元に近い画質、ファイルは大きめ",
     "quality.balanced": "標準",
     "quality.balanced.detail": "画質と容量のバランス",
     "quality.small": "小サイズ",
     "quality.small.detail": "共有や送信に最適",
-
     "res.original": "元のまま",
     "res.4k": "4K",
     "res.1080": "1080p",
@@ -555,7 +550,6 @@
     "res.480": "480p",
     "res.360": "360p",
     "res.custom": "カスタム…",
-
     "status.waiting": "待機中",
     "status.probing": "解析中",
     "status.running": "変換中",
@@ -566,14 +560,11 @@
     "status.audio": "音声",
     "status.image": "画像",
     "status.noFiles": "ファイルがありません",
-
     "footer.summary": "%d 個のファイル · %d 個完了",
     "footer.running": "%d 個変換中 · %d/%d 完了",
-
     "group.video": "動画",
     "group.audio": "音声",
     "group.image": "画像",
-
     "menu.file": "ファイル",
     "menu.edit": "編集",
     "menu.convert": "変換",
@@ -600,7 +591,6 @@
     "menu.minimize": "しまう",
     "menu.zoom": "拡大/縮小",
     "menu.followSystem": "システムに従う",
-
     "lang.zhHans": "简体中文",
     "lang.zhHant": "繁體中文",
     "lang.en": "English",
@@ -610,10 +600,8 @@
     "lang.system": "システムに従う",
     "lang.restartTitle": "再起動が必要です",
     "lang.restartBody": "言語を反映するには「万能変換」を開き直してください。",
-
-    "about.title": "万能変換 1.1",
+    "about.title": "万能変換 1.2",
     "about.body": "FFmpeg を搭載した動画 / 音声 / 画像の変換ツール。32 形式の出力とほぼすべての入力をサポートします。\n\nUI: MIT License\nエンジン: FFmpeg（GPL v3）",
-
     "msg.title": "お知らせ",
     "msg.noMedia": "変換できる音声・動画・画像ファイルが見つかりません。",
     "msg.duplicate": "これらのファイルはすでにリストにあります。",
@@ -632,11 +620,9 @@
     "msg.probeOutput": "解析結果の形式が不正です",
     "msg.noTracks": "変換できる音声・映像トラックがありません",
     "msg.hwFallback": "ハードウェアエンコードが使えないため、ソフトウェアに切り替えました",
-
     "row.reveal": "Finder で表示",
     "row.retry": "もう一度変換",
     "row.remove": "リストから削除",
-
     "fmt.mp4.sub": "H.264 + AAC · 最も互換性が高い",
     "fmt.mov.sub": "H.264 + AAC · Apple",
     "fmt.m4v.sub": "H.264 + AAC · iTunes",
@@ -668,18 +654,30 @@
     "fmt.avif.sub": "次世代 · 高圧縮",
     "fmt.tiff.sub": "印刷 · 可逆",
     "fmt.bmp.sub": "ビットマップ · 無圧縮",
-    "fmt.ico.sub": "アイコン · Windows"
+    "fmt.ico.sub": "アイコン · Windows",
+    "settings.incompatible": "一部の形式は選択中のファイルに使えません",
+    "row.elapsed": "%@ で完了",
+    "preset.title": "プリセット",
+    "preset.save": "プリセットとして保存…",
+    "preset.delete": "削除",
+    "preset.custom": "カスタムプリセット",
+    "preset.namePrompt": "設定に名前を付けてください",
+    "preset.namePlaceholder": "例：チャット共有",
+    "preset.wechat": "チャット共有 · 720p",
+    "preset.archive": "高画質保存 · 1080p",
+    "preset.audio": "音声のみ · MP3",
+    "preset.gif": "スタンプ GIF",
+    "preset.webm": "Web 動画 · WebM",
+    "preset.podcast": "ポッドキャスト · M4A",
+    "preset.none": "カスタム"
   },
-
   "ko": {
     "app.title": "만능 변환",
     "app.tagline": "비디오 · 오디오 · GIF 상호 변환 · FFmpeg 기반",
-
     "drop.title": "파일을 여기로 끌어다 놓으세요",
     "drop.subtitle": "MP4, MKV, MOV, AVI, MP3, FLAC, WAV, M4A, JPG, PNG 등 거의 모든 형식 지원",
     "drop.continue": "파일 더 추가 또는",
     "drop.files": "%d개 파일",
-
     "btn.chooseFiles": "파일 선택",
     "btn.chooseFolder": "폴더 선택",
     "btn.start": "변환 시작",
@@ -691,7 +689,6 @@
     "btn.ok": "확인",
     "btn.restart": "지금 재시작",
     "btn.later": "나중에",
-
     "settings.format": "출력 형식",
     "settings.quality": "화질",
     "settings.resolution": "해상도",
@@ -708,14 +705,12 @@
     "settings.hwVideoOnly": "비디오 형식에서만 사용 가능",
     "settings.width": "너비",
     "settings.height": "높이",
-
     "quality.high": "고화질",
     "quality.high.detail": "원본에 가깝고 파일이 큼",
     "quality.balanced": "표준",
     "quality.balanced.detail": "화질과 용량의 균형",
     "quality.small": "작은 용량",
     "quality.small.detail": "공유와 전송에 적합",
-
     "res.original": "원본 유지",
     "res.4k": "4K",
     "res.1080": "1080p",
@@ -723,7 +718,6 @@
     "res.480": "480p",
     "res.360": "360p",
     "res.custom": "사용자 지정…",
-
     "status.waiting": "대기",
     "status.probing": "분석 중",
     "status.running": "변환 중",
@@ -734,14 +728,11 @@
     "status.audio": "오디오",
     "status.image": "이미지",
     "status.noFiles": "아직 파일 없음",
-
     "footer.summary": "%d개 파일 · %d개 완료",
     "footer.running": "%d개 변환 중 · %d/%d 완료",
-
     "group.video": "비디오",
     "group.audio": "오디오",
     "group.image": "이미지",
-
     "menu.file": "파일",
     "menu.edit": "편집",
     "menu.convert": "변환",
@@ -768,7 +759,6 @@
     "menu.minimize": "최소화",
     "menu.zoom": "확대/축소",
     "menu.followSystem": "시스템 설정 따르기",
-
     "lang.zhHans": "简体中文",
     "lang.zhHant": "繁體中文",
     "lang.en": "English",
@@ -778,10 +768,8 @@
     "lang.system": "시스템 설정 따르기",
     "lang.restartTitle": "재시작 필요",
     "lang.restartBody": "언어를 적용하려면 「만능 변환」을 다시 열어 주세요.",
-
-    "about.title": "만능 변환 1.1",
+    "about.title": "만능 변환 1.2",
     "about.body": "FFmpeg 기반 비디오 / 오디오 / 이미지 변환 도구. 32가지 출력 형식과 거의 모든 입력을 지원합니다.\n\nUI: MIT License\n엔진: FFmpeg (GPL v3)",
-
     "msg.title": "알림",
     "msg.noMedia": "변환할 수 있는 미디어나 이미지 파일이 없습니다.",
     "msg.duplicate": "이미 목록에 있는 파일입니다.",
@@ -800,11 +788,9 @@
     "msg.probeOutput": "분석 결과 형식이 올바르지 않습니다",
     "msg.noTracks": "변환할 오디오/비디오 트랙이 없습니다",
     "msg.hwFallback": "하드웨어 인코딩을 쓸 수 없어 소프트웨어로 전환했습니다",
-
     "row.reveal": "Finder에서 보기",
     "row.retry": "다시 변환",
     "row.remove": "목록에서 제거",
-
     "fmt.mp4.sub": "H.264 + AAC · 가장 호환성 높음",
     "fmt.mov.sub": "H.264 + AAC · Apple",
     "fmt.m4v.sub": "H.264 + AAC · iTunes",
@@ -836,18 +822,30 @@
     "fmt.avif.sub": "차세대 · 고압축",
     "fmt.tiff.sub": "인쇄 · 무손실",
     "fmt.bmp.sub": "비트맵 · 무압축",
-    "fmt.ico.sub": "아이콘 · Windows"
+    "fmt.ico.sub": "아이콘 · Windows",
+    "settings.incompatible": "일부 형식은 선택한 파일에 사용할 수 없습니다",
+    "row.elapsed": "%@ 소요",
+    "preset.title": "프리셋",
+    "preset.save": "프리셋으로 저장…",
+    "preset.delete": "삭제",
+    "preset.custom": "사용자 프리셋",
+    "preset.namePrompt": "이 설정의 이름을 입력하세요",
+    "preset.namePlaceholder": "예: 채팅 공유",
+    "preset.wechat": "채팅 공유 · 720p",
+    "preset.archive": "고화질 보관 · 1080p",
+    "preset.audio": "오디오만 · MP3",
+    "preset.gif": "스티커 GIF",
+    "preset.webm": "웹 비디오 · WebM",
+    "preset.podcast": "팟캐스트 · M4A",
+    "preset.none": "사용자 설정"
   },
-
   "fr": {
     "app.title": "AnyConvert",
     "app.tagline": "Vidéo · audio · GIF — convertissez tout, propulsé par FFmpeg",
-
     "drop.title": "Déposez vos fichiers ici",
     "drop.subtitle": "MP4, MKV, MOV, AVI, MP3, FLAC, WAV, M4A, JPG, PNG et presque tous les formats",
     "drop.continue": "Ajouter des fichiers, ou",
     "drop.files": "%d fichiers",
-
     "btn.chooseFiles": "Choisir des fichiers",
     "btn.chooseFolder": "Choisir un dossier",
     "btn.start": "Démarrer",
@@ -859,7 +857,6 @@
     "btn.ok": "OK",
     "btn.restart": "Redémarrer",
     "btn.later": "Plus tard",
-
     "settings.format": "Format de sortie",
     "settings.quality": "Qualité",
     "settings.resolution": "Résolution",
@@ -876,14 +873,12 @@
     "settings.hwVideoOnly": "Formats vidéo uniquement",
     "settings.width": "L",
     "settings.height": "H",
-
     "quality.high": "Élevée",
     "quality.high.detail": "Proche de l'original, fichiers plus gros",
     "quality.balanced": "Équilibrée",
     "quality.balanced.detail": "Bon compromis qualité/taille",
     "quality.small": "Petite",
     "quality.small.detail": "Idéal pour le partage",
-
     "res.original": "Conserver l'original",
     "res.4k": "4K",
     "res.1080": "1080p",
@@ -891,7 +886,6 @@
     "res.480": "480p",
     "res.360": "360p",
     "res.custom": "Personnalisée…",
-
     "status.waiting": "En attente",
     "status.probing": "Analyse",
     "status.running": "Conversion",
@@ -902,14 +896,11 @@
     "status.audio": "Audio",
     "status.image": "Image",
     "status.noFiles": "Aucun fichier",
-
     "footer.summary": "%d fichiers · %d terminés",
     "footer.running": "%d en cours · %d/%d terminés",
-
     "group.video": "Vidéo",
     "group.audio": "Audio",
     "group.image": "Images",
-
     "menu.file": "Fichier",
     "menu.edit": "Édition",
     "menu.convert": "Conversion",
@@ -936,7 +927,6 @@
     "menu.minimize": "Réduire",
     "menu.zoom": "Zoom",
     "menu.followSystem": "Réglage système",
-
     "lang.zhHans": "简体中文",
     "lang.zhHant": "繁體中文",
     "lang.en": "English",
@@ -946,10 +936,8 @@
     "lang.system": "Réglage système",
     "lang.restartTitle": "Redémarrage requis",
     "lang.restartBody": "Rouvrez AnyConvert pour appliquer la nouvelle langue.",
-
-    "about.title": "AnyConvert 1.1",
+    "about.title": "AnyConvert 1.2",
     "about.body": "Un convertisseur vidéo / audio / image propulsé par FFmpeg. 32 formats de sortie, presque toutes les entrées.\n\nInterface : MIT License\nMoteur : FFmpeg (GPL v3)",
-
     "msg.title": "Information",
     "msg.noMedia": "Aucun fichier média ou image trouvé.",
     "msg.duplicate": "Ces fichiers sont déjà dans la liste.",
@@ -968,11 +956,9 @@
     "msg.probeOutput": "Sortie d'analyse inattendue",
     "msg.noTracks": "Aucune piste audio ou vidéo à convertir",
     "msg.hwFallback": "Encodage matériel indisponible — bascule en logiciel",
-
     "row.reveal": "Afficher dans le Finder",
     "row.retry": "Reconvertir",
     "row.remove": "Retirer de la liste",
-
     "fmt.mp4.sub": "H.264 + AAC · Le plus compatible",
     "fmt.mov.sub": "H.264 + AAC · Apple",
     "fmt.m4v.sub": "H.264 + AAC · iTunes",
@@ -1004,6 +990,21 @@
     "fmt.avif.sub": "Nouvelle génération · forte compression",
     "fmt.tiff.sub": "Impression · sans perte",
     "fmt.bmp.sub": "Bitmap · non compressé",
-    "fmt.ico.sub": "Icône · Windows"
+    "fmt.ico.sub": "Icône · Windows",
+    "settings.incompatible": "Certains formats ne sont pas disponibles pour ces fichiers",
+    "row.elapsed": "en %@",
+    "preset.title": "Préréglages",
+    "preset.save": "Enregistrer comme préréglage…",
+    "preset.delete": "Supprimer",
+    "preset.custom": "Préréglage personnel",
+    "preset.namePrompt": "Nommez cette configuration",
+    "preset.namePlaceholder": "ex. Partage chat",
+    "preset.wechat": "Partage chat · 720p",
+    "preset.archive": "Archivage · 1080p",
+    "preset.audio": "Audio seul · MP3",
+    "preset.gif": "GIF sticker",
+    "preset.webm": "Vidéo web · WebM",
+    "preset.podcast": "Podcast · M4A",
+    "preset.none": "Personnalisé"
   }
 }

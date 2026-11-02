@@ -29,7 +29,9 @@ enum CommandBuilder {
                 args += ["-vf", filter]
             }
             args += imageArguments(settings: settings)
-            args += ["-frames:v", "1", "-update", "1", "-map_metadata", "0", output.path]
+            args += ["-frames:v", "1", "-update", "1", "-map_metadata", "0"]
+            args += settings.extraArguments
+            args.append(output.path)
             return args
         }
 
@@ -62,6 +64,7 @@ enum CommandBuilder {
             break
         }
 
+        args += settings.extraArguments
         args.append(output.path)
         return args
     }
@@ -258,7 +261,6 @@ enum CommandBuilder {
             "-an",
             "-vf", filter,
             "-loop", "0",
-            output.path,
-        ]
+        ] + settings.extraArguments + [output.path]
     }
 }

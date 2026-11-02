@@ -35,6 +35,7 @@ final class AppModel {
     private(set) var customDirectory: URL?
     private(set) var customWidth: Int?
     private(set) var customHeight: Int?
+    private(set) var extraArguments: [String] = []
 
     private let engine = Engine.shared
     private let defaults = UserDefaults.standard
@@ -113,7 +114,96 @@ final class AppModel {
         guard formatID != id else { return }
         formatID = id
         defaults.set(id, forKey: Keys.format)
+        if let ext = pendingSourceExtension() {
+            defaults.set(id, forKey: "ac.target.\(ext)")
+        }
         observer?.modelSettingsDidChange(self)
+    }
+
+    /// 当前待转换文件的源扩展名（用于「按源格式记住目标格式」）
+    private func pendingSourceExtension() -> String? {
+        let pending = jobs.first {
+            $0.status == .waiting || $0.status == .failed || $0.status == .cancelled
+        }
+        return pending?.url.pathExtension.lowercased()
+    }
+
+    /// 恢复该源扩展名上次选择的目标格式（仅在列表原本为空时调用）
+    private func restoreRememberedFormat(for extensionName: String) {
+        guard let remembered = defaults.string(forKey: "ac.target.\(extensionName)"),
+              Catalog.all.contains(where: { $0.id == remembered }),
+              remembered != formatID else { return }
+        formatID = remembered
+        observer?.modelSettingsDidChange(self)
+    }
+
+    /// 当前文件集合可用的输出格式（能力筛选，参考飞鼠格式的 targets 接口）
+    var availableFormats: [OutputFormat] {
+        guard !jobs.isEmpty else { return Catalog.all }
+        return Catalog.all.filter { format in
+            jobs.allSatisfy { job in
+                guard let info = job.info else { return true }
+                switch format.kind {
+                case .audio:
+                    return info.hasAudio
+                case .video:
+                    return info.hasVideo && (!info.isImage || format.id == "gif")
+                case .image:
+                    return info.hasVideo
+                }
+            }
+        }
+    }
+
+    /// 若当前目标格式与文件不兼容，自动切换到同类的可用格式
+    func ensureValidFormat() {
+        let allowed = Set(availableFormats.map(\.id))
+        guard !allowed.contains(formatID) else { return }
+        let kind = currentFormat.kind
+        let fallback = availableFormats.first(where: { $0.kind == kind }) ?? availableFormats.first
+        guard let choice = fallback else { return }
+        formatID = choice.id
+        defaults.set(choice.id, forKey: Keys.format)
+        observer?.modelSettingsDidChange(self)
+    }
+
+    /// 应用预设（对应 File Converter 的 ConversionPreset 应用逻辑）
+    func apply(preset: ConversionPreset) {
+        formatID = preset.formatID
+        quality = preset.quality
+        resolution = preset.resolution
+        audioBitrate = preset.bitrate
+        hardware = preset.hardware && hardwareAvailable
+        customWidth = preset.customWidth
+        customHeight = preset.customHeight
+        extraArguments = preset.extraArguments
+
+        defaults.set(formatID, forKey: Keys.format)
+        defaults.set(quality.rawValue, forKey: Keys.quality)
+        defaults.set(resolution.rawValue, forKey: Keys.resolution)
+        defaults.set(audioBitrate.rawValue, forKey: Keys.audioBitrate)
+        defaults.set(hardware, forKey: Keys.hardware)
+        defaults.set(customWidth ?? 0, forKey: Keys.customWidth)
+        defaults.set(customHeight ?? 0, forKey: Keys.customHeight)
+        if let ext = pendingSourceExtension() {
+            defaults.set(formatID, forKey: "ac.target.\(ext)")
+        }
+        observer?.modelSettingsDidChange(self)
+    }
+
+    /// 当前设置快照（用于保存为预设）
+    var currentSettingsSnapshot: ConversionSettings { makeSettings() }
+
+    func tickElapsed() {
+        guard isRunning else { return }
+        var touched: [UUID] = []
+        for index in jobs.indices where jobs[index].status == .running {
+            if let started = jobs[index].startedAt {
+                jobs[index].elapsed = Date().timeIntervalSince(started)
+                touched.append(jobs[index].id)
+            }
+        }
+        for id in touched { observer?.modelJobDidUpdate(self, id: id) }
     }
 
     func setQuality(_ value: Quality) {
@@ -211,6 +301,7 @@ final class AppModel {
             return
         }
 
+        let wasEmpty = jobs.isEmpty
         let existing = Set(jobs.map { $0.url.standardizedFileURL })
         var added: [UUID] = []
         for url in expanded {
@@ -227,6 +318,9 @@ final class AppModel {
             return
         }
         observer?.modelJobsDidChange(self)
+        if wasEmpty, let first = added.first, let job = job(for: first) {
+            restoreRememberedFormat(for: job.url.pathExtension.lowercased())
+        }
         probe(added)
     }
 
@@ -261,6 +355,10 @@ final class AppModel {
     }
 
     func remove(_ id: UUID) {
+        guard !isRunning else {
+            observer?.modelDidProduceMessage(self, message: L10n.t("msg.cancelFirst"))
+            return
+        }
         jobs.removeAll { $0.id == id }
         observer?.modelJobsDidChange(self)
     }
@@ -369,7 +467,8 @@ final class AppModel {
             audioBitrate: audioBitrate,
             hardware: hardware && hardwareAvailable && currentFormat.kind == .video && !currentFormat.isAnimatedImage,
             customWidth: customWidth,
-            customHeight: customHeight
+            customHeight: customHeight,
+            extraArguments: extraArguments
         )
     }
 
@@ -422,6 +521,8 @@ final class AppModel {
         jobs[runningIndex].progress = 0
         jobs[runningIndex].speed = ""
         jobs[runningIndex].message = ""
+        jobs[runningIndex].startedAt = Date()
+        jobs[runningIndex].elapsed = 0
         observer?.modelJobDidUpdate(self, id: id)
 
         do {
@@ -431,6 +532,8 @@ final class AppModel {
             jobs[doneIndex].progress = 1
             jobs[doneIndex].speed = ""
             jobs[doneIndex].outputURL = output
+            jobs[doneIndex].elapsed = jobs[doneIndex].startedAt.map { Date().timeIntervalSince($0) } ?? jobs[doneIndex].elapsed
+            jobs[doneIndex].startedAt = nil
             lastOutputDirectory = directory
             observer?.modelJobDidUpdate(self, id: id)
         } catch let error as ConvertError {
@@ -448,7 +551,10 @@ final class AppModel {
                                job: Job,
                                info: MediaInfo,
                                output: URL) async throws {
-        var arguments = CommandBuilder.arguments(settings: settings, input: job.url, output: output, info: info)
+        guard let conversionEngine = EngineRegistry.engine(for: settings.format),
+              var arguments = conversionEngine.arguments(for: settings, input: job.url, output: output, info: info) else {
+            throw ConvertError.encodeFailed("No engine available")
+        }
 
         do {
             try await engine.run(arguments: arguments, duration: info.duration) { [weak self] percent, speed in
@@ -459,7 +565,8 @@ final class AppModel {
             // 硬件编码不可用 → 自动回退到软件编码
             var software = settings
             software.hardware = false
-            arguments = CommandBuilder.arguments(settings: software, input: job.url, output: output, info: info)
+            arguments = EngineRegistry.engine(for: software.format)?.arguments(
+                for: software, input: job.url, output: output, info: info) ?? arguments
             try? FileManager.default.removeItem(at: output)
             try await engine.run(arguments: arguments, duration: info.duration) { [weak self] percent, speed in
                 Task { @MainActor in self?.updateProgress(jobID: job.id, percent: percent, speed: speed) }
@@ -480,6 +587,9 @@ final class AppModel {
         guard let index = jobs.firstIndex(where: { $0.id == jobID }) else { return }
         jobs[index].progress = percent
         jobs[index].speed = speed
+        if let started = jobs[index].startedAt {
+            jobs[index].elapsed = Date().timeIntervalSince(started)
+        }
         observer?.modelJobDidUpdate(self, id: jobID)
     }
 
@@ -488,6 +598,8 @@ final class AppModel {
         jobs[index].status = .cancelled
         jobs[index].progress = 0
         jobs[index].speed = ""
+        jobs[index].elapsed = jobs[index].startedAt.map { Date().timeIntervalSince($0) } ?? jobs[index].elapsed
+        jobs[index].startedAt = nil
         observer?.modelJobDidUpdate(self, id: id)
     }
 
@@ -496,6 +608,8 @@ final class AppModel {
         jobs[index].status = .failed
         jobs[index].speed = ""
         jobs[index].message = message
+        jobs[index].elapsed = jobs[index].startedAt.map { Date().timeIntervalSince($0) } ?? jobs[index].elapsed
+        jobs[index].startedAt = nil
         observer?.modelJobDidUpdate(self, id: id)
     }
 }

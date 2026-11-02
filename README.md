@@ -8,7 +8,10 @@
 ## 功能
 
 - **32 种输出格式**：13 种视频 + 12 种音频 + 7 种图片，输入由 FFmpeg 解码器全覆盖（300+ 种）
-- **多语言界面**：简体中文、繁體中文、English、日本語、한국어、Français（菜单「语言 / Language」切换）
+- **多语言界面**：简体中文、繁體中文、English、日本語、한국어、Français
+  标题栏右侧有语言按钮，也可以在菜单「语言 / Language」里切换
+- **预设**：内置 6 套常用预设（微信分享 720p、高画质归档、只要音频、表情包 GIF、网页视频 WebM、播客 M4A），可把当前设置保存为自定义预设
+- **Finder 集成**：右键 → 服务 →「用万能转码转换」；也可以「打开方式」或把文件拖到 Dock 图标
 - **拖拽 / 选择文件 / 选择文件夹**（文件夹递归扫描，跳过隐藏目录与 .app 包）
 - **批量队列**：进度百分比、实时倍速、逐个转换、随时取消、失败可重试
 - **画质三档**：高质量 / 标准 / 小体积
@@ -65,7 +68,7 @@
 ## 下载
 
 - 最新版本：<https://github.com/Inkpaper-mz/AnyConvert/releases/latest>
-- 1.1.0 通用版（Intel + Apple 芯片）：[AnyConvert-1.1.0-macOS-universal.dmg](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.1.0/AnyConvert-1.1.0-macOS-universal.dmg)
+- 1.2.0 通用版（Intel + Apple 芯片）：[AnyConvert-1.2.0-macOS-universal.dmg](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.2.0/AnyConvert-1.2.0-macOS-universal.dmg)
 
 ## 安装
 
@@ -81,6 +84,20 @@
 3. 点「开始转换」，完成后点每行的「完成」徽章可在 Finder 中定位文件。
 
 快捷键：`⌘O` 添加文件 · `⇧⌘O` 添加文件夹 · `⌘↩` 开始转换 · `⌘.` 取消 · `⇧⌘R` 打开输出文件夹
+
+### 预设
+
+![预设](docs/screenshot.png)
+
+- 「预设」下拉里直接选内置组合，一步套用格式/画质/分辨率/码率
+- 「保存为预设…」把当前设置存成自定义预设，可随时删除
+- 预设会同时写入「按源格式记忆」的目标格式
+
+### Finder 右键
+
+- 在 Finder 选中文件 → 右键 → **服务** →「用万能转码转换 (AnyConvert)」
+- 或右键 → **打开方式** → 万能转码
+- 或把文件拖到 Dock 上的应用图标
 
 ### 自定义分辨率
 

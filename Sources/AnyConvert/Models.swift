@@ -220,6 +220,8 @@ struct Job: Identifiable {
     var speed: String = ""
     var message: String = ""
     var outputURL: URL?
+    var startedAt: Date?
+    var elapsed: TimeInterval = 0
 
     var displayName: String { url.lastPathComponent }
     var fileExtension: String { url.pathExtension.uppercased() }
@@ -255,6 +257,7 @@ struct ConversionSettings {
     var hardware: Bool
     var customWidth: Int? = nil
     var customHeight: Int? = nil
+    var extraArguments: [String] = []
 }
 
 enum ConvertError: LocalizedError {

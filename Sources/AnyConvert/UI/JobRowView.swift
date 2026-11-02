@@ -149,6 +149,15 @@ final class JobRowView: CardView {
         self.model = model
     }
 
+    /// 转换进行中锁定列表编辑
+    func setLocked(_ locked: Bool) {
+        for item in menu?.items ?? [] {
+            if item.action == #selector(handleRetry) || item.action == #selector(handleRemove) {
+                item.isEnabled = !locked
+            }
+        }
+    }
+
     func configure(_ job: Job) {
         jobID = job.id
         titleLabel.stringValue = job.displayName
@@ -186,8 +195,13 @@ final class JobRowView: CardView {
             revealButton.isHidden = true
             show(progress: true, message: nil)
             progressBar.progress = job.progress
-            percentLabel.stringValue = "\(Int((job.progress * 100).rounded()))%"
-            speedLabel.stringValue = job.speed
+            let hasDuration = (job.info?.duration ?? 0) > 0
+            percentLabel.isHidden = !hasDuration
+            percentLabel.stringValue = hasDuration ? "\(Int((job.progress * 100).rounded()))%" : ""
+            var extras: [String] = []
+            if !job.speed.isEmpty { extras.append(job.speed) }
+            if job.elapsed >= 1 { extras.append(String(format: "%.0fs", job.elapsed)) }
+            speedLabel.stringValue = extras.joined(separator: "  ·  ")
         case .done:
             statusBadge.set(text: L10n.t("status.done"), tone: .success)
             revealButton.isHidden = false
@@ -240,6 +254,9 @@ final class JobRowView: CardView {
         }
         if job.status == .done, let out = job.outputURL {
             parts.append("→ " + out.lastPathComponent)
+        }
+        if job.status == .done, job.elapsed >= 1 {
+            parts.append(L10n.t("row.elapsed", String(format: "%.0fs", job.elapsed)))
         }
         return parts.joined(separator: "  ·  ")
     }

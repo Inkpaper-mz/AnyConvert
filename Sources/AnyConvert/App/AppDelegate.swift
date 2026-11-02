@@ -45,6 +45,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.orderFrontRegardless()
         self.window = window
 
+        NSApp.servicesProvider = self
+        NSUpdateDynamicServices()
         NSApp.activate(ignoringOtherApps: true)
 
         // 调试用：--focus-custom 自动聚焦第一个可编辑输入框（用于验证焦点环）
@@ -82,6 +84,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        // 调试用：--preset <id> 启动时应用预设
+        if let presetIndex = args.firstIndex(of: "--preset"), presetIndex + 1 < args.count,
+           let preset = PresetStore.shared.preset(id: args[presetIndex + 1]) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                MainActor.assumeIsolated { AppModel.shared.apply(preset: preset) }
+            }
+        }
+
         // 调试用：--format <id> 启动时选中格式
         if let formatIndex = args.firstIndex(of: "--format"), formatIndex + 1 < args.count {
             let formatID = args[formatIndex + 1]
@@ -110,6 +120,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         true
+    }
+
+    /// Finder 右键 → 服务 →「用万能转码转换」
+    @objc func convertWithAnyConvert(_ pboard: NSPasteboard,
+                                     userData: String,
+                                     error: AutoreleasingUnsafeMutablePointer<NSString>) {
+        let options: [NSPasteboard.ReadingOptionKey: Any] = [.urlReadingFileURLsOnly: true]
+        guard let urls = pboard.readObjects(forClasses: [NSURL.self], options: options) as? [URL],
+              !urls.isEmpty else {
+            error.pointee = L10n.t("msg.noMedia") as NSString
+            return
+        }
+        AppModel.shared.addFiles(urls)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    /// Finder 双击 / 打开方式
+    func application(_ sender: NSApplication, openFiles filenames: [String]) {
+        guard !filenames.isEmpty else {
+            sender.reply(toOpenOrPrint: .failure)
+            return
+        }
+        AppModel.shared.addFiles(filenames.map { URL(fileURLWithPath: $0) })
+        NSApp.activate(ignoringOtherApps: true)
+        sender.reply(toOpenOrPrint: .success)
     }
 
     // MARK: - 菜单
@@ -218,32 +253,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func languageSelected(_ sender: NSMenuItem) {
         let languages = L10n.Language.allCases
         guard sender.tag >= 0, sender.tag < languages.count else { return }
-        let chosen = languages[sender.tag]
-        guard chosen != L10n.preferred else { return }
-        L10n.setLanguage(chosen)
-
-        let alert = NSAlert()
-        alert.messageText = L10n.t("lang.restartTitle")
-        alert.informativeText = L10n.t("lang.restartBody")
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: L10n.t("btn.restart"))
-        alert.addButton(withTitle: L10n.t("btn.later"))
-        if alert.runModal() == .alertFirstButtonReturn {
-            relaunch()
-        }
-    }
-
-    private func relaunch() {
-        let url = Bundle.main.bundleURL
-        guard url.pathExtension == "app" else {
-            NSApp.terminate(nil)
-            return
-        }
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.createsNewApplicationInstance = true
-        NSWorkspace.shared.openApplication(at: url, configuration: configuration) { _, _ in
-            DispatchQueue.main.async { NSApp.terminate(nil) }
-        }
+        LanguageSwitcher.apply(languages[sender.tag], window: window)
     }
 
     // MARK: - 其他

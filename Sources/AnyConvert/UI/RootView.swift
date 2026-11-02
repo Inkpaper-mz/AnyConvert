@@ -24,9 +24,11 @@ final class RootView: NSView, AppModelObserver {
     private let clearDoneButton = PillButton(title: L10n.t("btn.clearDone"))
     private let summaryLabel = Label.make("", size: 11, color: .secondaryLabelColor)
     private let ffmpegBadge = BadgeView(text: "检测中…", tone: .neutral)
+    private let languagePopup = NSPopUpButton(frame: .zero, pullsDown: false)
     private let folderButton = NSButton()
     private let dropHint = Label.make("", size: 11, color: .secondaryLabelColor)
     private var rows: [UUID: JobRowView] = [:]
+    private var tickTimer: Timer?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -81,6 +83,14 @@ final class RootView: NSView, AppModelObserver {
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
+        languagePopup.target = self
+        languagePopup.action = #selector(languageChanged)
+        languagePopup.font = Theme.font(11)
+        languagePopup.controlSize = .small
+        languagePopup.translatesAutoresizingMaskIntoConstraints = false
+        languagePopup.toolTip = L10n.t("menu.language")
+        buildLanguageMenu()
+
         folderButton.image = Symbols.image("folder", size: 13, weight: .regular)
         folderButton.isBordered = false
         folderButton.bezelStyle = .regularSquare
@@ -93,6 +103,7 @@ final class RootView: NSView, AppModelObserver {
         header.addSubview(icon)
         header.addSubview(titleStack)
         header.addSubview(spacer)
+        header.addSubview(languagePopup)
         header.addSubview(ffmpegBadge)
         header.addSubview(folderButton)
         titleStack.translatesAutoresizingMaskIntoConstraints = false
@@ -111,7 +122,11 @@ final class RootView: NSView, AppModelObserver {
             titleStack.centerYAnchor.constraint(equalTo: header.centerYAnchor, constant: 12),
             titleStack.trailingAnchor.constraint(lessThanOrEqualTo: ffmpegBadge.leadingAnchor, constant: -12),
 
-            ffmpegBadge.trailingAnchor.constraint(equalTo: folderButton.leadingAnchor, constant: -10),
+            languagePopup.trailingAnchor.constraint(equalTo: folderButton.leadingAnchor, constant: -10),
+            languagePopup.centerYAnchor.constraint(equalTo: header.centerYAnchor, constant: 12),
+            languagePopup.widthAnchor.constraint(equalToConstant: 108),
+
+            ffmpegBadge.trailingAnchor.constraint(equalTo: languagePopup.leadingAnchor, constant: -10),
             ffmpegBadge.centerYAnchor.constraint(equalTo: header.centerYAnchor, constant: 12),
 
             folderButton.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -18),
@@ -303,6 +318,27 @@ final class RootView: NSView, AppModelObserver {
         ])
     }
 
+    private func buildLanguageMenu() {
+        languagePopup.removeAllItems()
+        for (index, language) in L10n.Language.allCases.enumerated() {
+            languagePopup.addItem(withTitle: L10n.displayName(of: language))
+            languagePopup.lastItem?.tag = index
+        }
+        if let index = L10n.Language.allCases.firstIndex(of: L10n.preferred) {
+            languagePopup.selectItem(at: index)
+        }
+    }
+
+    @objc private func languageChanged() {
+        let languages = L10n.Language.allCases
+        let index = languagePopup.indexOfSelectedItem
+        guard index >= 0, index < languages.count else { return }
+        LanguageSwitcher.apply(languages[index], window: window)
+        if let current = languages.firstIndex(of: L10n.preferred) {
+            languagePopup.selectItem(at: current)
+        }
+    }
+
     // MARK: - 数据刷新
 
     private func reloadAll() {
@@ -361,12 +397,15 @@ final class RootView: NSView, AppModelObserver {
         startButton.isEnabled = model.canStart
         startButton.title = model.isRunning ? L10n.t("btn.transcoding") : L10n.t("btn.start")
         folderButton.isEnabled = !model.jobs.isEmpty
+        if model.isRunning { startTicker() } else { stopTicker() }
+        for job in model.jobs { rows[job.id]?.setLocked(model.isRunning) }
     }
 
     // MARK: - AppModelObserver
 
     func modelJobsDidChange(_ model: AppModel) {
         syncRows()
+        model.ensureValidFormat()
         updateFooter()
         dropZone.setCompact(!model.jobs.isEmpty, fileCount: model.jobs.count)
         settingsPanel.syncFromModel()
@@ -375,6 +414,7 @@ final class RootView: NSView, AppModelObserver {
     func modelJobDidUpdate(_ model: AppModel, id: UUID) {
         guard let job = model.job(for: id) else { return }
         rows[id]?.updateStatus(job)
+        model.ensureValidFormat()
         updateFooter()
     }
 
@@ -397,6 +437,20 @@ final class RootView: NSView, AppModelObserver {
         } else {
             alert.runModal()
         }
+    }
+
+    // MARK: - 计时
+
+    private func startTicker() {
+        guard tickTimer == nil else { return }
+        tickTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.model.tickElapsed() }
+        }
+    }
+
+    private func stopTicker() {
+        tickTimer?.invalidate()
+        tickTimer = nil
     }
 
     // MARK: - 拖放

@@ -76,6 +76,10 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
     private weak var model: AppModel?
     private let stack = NSStackView()
 
+    private let presetPopup = NSPopUpButton(frame: .zero, pullsDown: false)
+    private let presetSaveButton = LinkButton(title: L10n.t("preset.save"))
+    private let presetDeleteButton = LinkButton(title: L10n.t("preset.delete"))
+    private var presetIDs: [String] = []
     private let formatPopup = NSPopUpButton(frame: .zero, pullsDown: false)
     private lazy var qualityControl = NSSegmentedControl(labels: Quality.allCases.map { $0.title },
                                                     trackingMode: .selectOne,
@@ -93,6 +97,7 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
     private let chooseDirButton = PillButton(title: L10n.t("btn.choose"))
     private let pathLabel = Label.make("", size: 10, color: .secondaryLabelColor)
     private let chipsRow = NSStackView()
+    private let incompatibleHint = Label.make(L10n.t("settings.incompatible"), size: 10, color: .secondaryLabelColor)
     private let divider = HairlineView()
     private let infoBox = CardView()
     private let customRow = NSStackView()
@@ -113,6 +118,7 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
 
     func attach(model: AppModel) {
         self.model = model
+        reloadPresets()
         syncFromModel()
     }
 
@@ -131,6 +137,24 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
             stack.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
 
+        // 预设
+        section(L10n.t("preset.title"))
+        presetPopup.target = self
+        presetPopup.action = #selector(presetChanged)
+        presetPopup.font = Theme.font(12)
+        presetPopup.translatesAutoresizingMaskIntoConstraints = false
+        stack.addArrangedSubview(presetPopup)
+        presetSaveButton.target = self
+        presetSaveButton.action = #selector(savePreset)
+        presetDeleteButton.target = self
+        presetDeleteButton.action = #selector(deletePreset)
+        let presetButtons = NSStackView(views: [presetSaveButton, presetDeleteButton])
+        presetButtons.orientation = .horizontal
+        presetButtons.spacing = 10
+        presetButtons.alignment = .centerY
+        stack.addArrangedSubview(presetButtons)
+        stack.setCustomSpacing(16, after: presetButtons)
+
         // 输出格式
         section(L10n.t("settings.format"))
         formatPopup.target = self
@@ -142,7 +166,11 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
 
         buildChips()
         stack.addArrangedSubview(chipsRow)
-        stack.setCustomSpacing(18, after: chipsRow)
+        incompatibleHint.lineBreakMode = .byWordWrapping
+        incompatibleHint.maximumNumberOfLines = 0
+        incompatibleHint.isHidden = true
+        stack.addArrangedSubview(incompatibleHint)
+        stack.setCustomSpacing(18, after: incompatibleHint)
 
         // 画质
         qualityTitle.stringValue = L10n.t("settings.quality")
@@ -267,9 +295,10 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         stack.addArrangedSubview(infoBox)
 
         // 所有视图已进入层级后再建立宽度约束
-        for view in [formatPopup, qualityControl, resolutionPopup, bitratePopup, divider, infoBox] as [NSView] {
+        for view in [presetPopup, formatPopup, qualityControl, resolutionPopup, bitratePopup, divider, infoBox] as [NSView] {
             view.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
         }
+        reloadPresets()
         for view in [qualityHint, hardwareHint, pathLabel] as [NSView] {
             view.widthAnchor.constraint(lessThanOrEqualTo: stack.widthAnchor).isActive = true
         }
@@ -364,9 +393,14 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         if let catalogIndex = Catalog.all.firstIndex(where: { $0.id == format.id }) {
             _ = formatPopup.selectItem(withTag: catalogIndex)
         }
+        let allowed = Set(model.availableFormats.map(\.id))
+        for item in formatPopup.itemArray where item.tag >= 0 && item.tag < Catalog.all.count {
+            item.isEnabled = allowed.contains(Catalog.all[item.tag].id) && !running
+        }
+        incompatibleHint.isHidden = allowed.count == Catalog.all.count
         for (id, chip) in chips {
             chip.isSelected = (id == format.id)
-            chip.isEnabled = !running
+            chip.isEnabled = !running && allowed.contains(id)
         }
 
         let showSizeControls = isVideo || format.isImage
@@ -427,29 +461,105 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
 
     // MARK: - 事件
 
+    private func reloadPresets() {
+        presetPopup.removeAllItems()
+        presetPopup.addItem(withTitle: L10n.t("preset.none"))
+        presetPopup.lastItem?.tag = -1
+        presetIDs = [""]
+        for preset in PresetStore.shared.all {
+            presetPopup.addItem(withTitle: preset.displayName)
+            presetPopup.lastItem?.tag = presetIDs.count - 1
+            presetIDs.append(preset.id)
+        }
+        presetPopup.selectItem(at: 0)
+        updatePresetButtons()
+    }
+
+    private func markCustomPreset() {
+        if presetPopup.numberOfItems > 0 {
+            presetPopup.selectItem(at: 0)
+            updatePresetButtons()
+        }
+    }
+
+    private func updatePresetButtons() {
+        let index = presetPopup.indexOfSelectedItem
+        let preset = (index > 0 && index < presetIDs.count)
+            ? PresetStore.shared.preset(id: presetIDs[index]) : nil
+        presetDeleteButton.isHidden = !(preset?.isBuiltin == false)
+    }
+
+    @objc private func presetChanged() {
+        let index = presetPopup.indexOfSelectedItem
+        guard index > 0, index < presetIDs.count,
+              let preset = PresetStore.shared.preset(id: presetIDs[index]) else {
+            updatePresetButtons()
+            return
+        }
+        model?.apply(preset: preset)
+        presetPopup.selectItem(at: index)
+        updatePresetButtons()
+    }
+
+    @objc private func savePreset() {
+        guard let model else { return }
+        let alert = NSAlert()
+        alert.messageText = L10n.t("preset.save")
+        alert.informativeText = L10n.t("preset.namePrompt")
+        alert.addButton(withTitle: L10n.t("btn.ok"))
+        alert.addButton(withTitle: L10n.t("btn.cancel"))
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 24))
+        field.placeholderString = L10n.t("preset.namePlaceholder")
+        alert.accessoryView = field
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let name = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let preset = PresetStore.shared.add(name: name.isEmpty ? L10n.t("preset.custom") : name,
+                                            from: model.currentSettingsSnapshot)
+        reloadPresets()
+        if let index = presetIDs.firstIndex(of: preset.id) {
+            presetPopup.selectItem(at: index)
+        } else {
+            markCustomPreset()
+        }
+        updatePresetButtons()
+    }
+
+    @objc private func deletePreset() {
+        let index = presetPopup.indexOfSelectedItem
+        guard index >= 0, index < presetIDs.count,
+              PresetStore.shared.preset(id: presetIDs[index])?.isBuiltin == false else { return }
+        PresetStore.shared.remove(id: presetIDs[index])
+        reloadPresets()
+    }
+
     @objc private func formatChanged() {
+        markCustomPreset()
         guard let title = formatPopup.selectedItem?.title,
               let format = Catalog.all.first(where: { $0.menuLabel == title }) else { return }
         model?.setFormat(format.id)
     }
 
     @objc private func qualityChanged() {
+        markCustomPreset()
         let index = qualityControl.selectedSegment
         guard index >= 0, index < Quality.allCases.count else { return }
         model?.setQuality(Quality.allCases[index])
     }
 
     @objc private func resolutionChanged() {
+        markCustomPreset()
         guard let tag = resolutionPopup.selectedItem?.tag, tag >= 0, tag < ResolutionPreset.allCases.count else { return }
         model?.setResolution(ResolutionPreset.allCases[tag])
     }
 
     @objc private func bitrateChanged() {
+        markCustomPreset()
         guard let tag = bitratePopup.selectedItem?.tag, tag >= 0, tag < AudioBitrate.allCases.count else { return }
         model?.setAudioBitrate(AudioBitrate.allCases[tag])
     }
 
     @objc private func hardwareChanged() {
+        markCustomPreset()
         model?.setHardware(hardwareSwitch.state == .on)
     }
 
@@ -469,6 +579,7 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
     }
 
     private func commitCustomResolution() {
+        markCustomPreset()
         let rawWidth = widthField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         let rawHeight = heightField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         let width = Int(rawWidth).flatMap { $0 > 0 ? $0 : nil }
