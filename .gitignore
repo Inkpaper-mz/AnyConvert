@@ -22,3 +22,4 @@ vendor/
 __pycache__/
 *.pyc
 service.log
+packaging/windows/*.msi

@@ -43,6 +43,15 @@ echo "==> 生成图标"
 swift "$ROOT/scripts/make_icon.swift" "$BUILD/AppIcon.iconset" >/dev/null
 iconutil -c icns "$BUILD/AppIcon.iconset" -o "$BUNDLE/Contents/Resources/AppIcon.icns"
 
+# 内置 LibreOffice（文档 / 表格 / 演示引擎）
+if [ "${BUNDLE_LO:-1}" = "1" ] && [ -d "$ROOT/crossplatform/vendor/LibreOffice.app" ]; then
+    echo "==> 内置 LibreOffice（约 800 MB）"
+    rm -rf "$BUNDLE/Contents/Resources/LibreOffice.app"
+    cp -R "$ROOT/crossplatform/vendor/LibreOffice.app" "$BUNDLE/Contents/Resources/LibreOffice.app"
+    dot_clean -m "$BUNDLE/Contents/Resources/LibreOffice.app" 2>/dev/null || true
+    xattr -cr "$BUNDLE/Contents/Resources/LibreOffice.app" 2>/dev/null || true
+fi
+
 echo "==> 内置 FFmpeg 引擎"
 for arch in $ARCHS; do
     if [ "$arch" = "arm64" ]; then
@@ -63,7 +72,11 @@ done
 echo "==> 签名（ad-hoc）"
 dot_clean -m "$BUNDLE" 2>/dev/null || true
 xattr -cr "$BUNDLE" 2>/dev/null || true
-codesign --force --deep --sign - "$BUNDLE"
+codesign --force --sign - "$BUNDLE/Contents/MacOS/$APP_NAME" 2>/dev/null || true
+for bin in "$BUNDLE/Contents/Resources/bin/"*; do
+    [ -f "$bin" ] && codesign --force --sign - "$bin" 2>/dev/null || true
+done
+codesign --force --sign - "$BUNDLE" 2>/dev/null || echo "    警告：顶层签名失败，继续打包"
 if codesign --verify --deep --strict "$BUNDLE" 2>/dev/null; then
     echo "    签名校验通过"
 else
