@@ -1,6 +1,6 @@
 # 万能转码 · AnyConvert 1.5.0
 
-全平台离线格式转换器：**macOS 原生应用 + Windows/Linux 本地 Web UI**。
+全平台离线格式转换器：**三平台统一本地 Web UI**（macOS 另提供原生版）。
 43 种目标格式（文档 / 图片 / 音频 / 视频），支持按目标体积压缩；
 自带 FFmpeg、LibreOffice 与 OCR 引擎，全部在本机完成，不联网、不上传。
 
@@ -100,30 +100,32 @@ PDF 合并/拆分/转图片/表格转 Excel/图片转 PDF/ZIP 打包、引擎状
 
 | 平台 | 文件 | 说明 |
 | --- | --- | --- |
-| macOS（Intel + Apple 芯片） | [AnyConvert-1.5.0-macOS-universal.dmg](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-macOS-universal.dmg) | 原生 App，拖入即用 |
-| Windows / Linux | [AnyConvert-1.5.0-crossplatform.zip](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-crossplatform.zip) | 免安装，需要 Python 3.10+，本地 Web UI |
+| macOS（推荐，Web UI） | [AnyConvert-1.5.0-macOS-web.zip](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-macOS-web.zip) | 解压双击 .app，首次运行安装脚本 |
+| Windows | [AnyConvert-1.5.0-Windows-x64.zip](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-Windows-x64.zip) | Python 3.10+，双击 安装依赖.bat |
+| Linux | [AnyConvert-1.5.0-Linux-x64.tar.gz](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-Linux-x64.tar.gz) | Python 3.10+，`bash install.sh` |
+| macOS 原生版（可选） | [AnyConvert-1.5.0-macOS-universal.dmg](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.0/AnyConvert-1.5.0-macOS-universal.dmg) | 32 种音视频/图片格式，无文档与 PDF 工具 |
 
 发布页：<https://github.com/Inkpaper-mz/AnyConvert/releases/tag/v1.5.0>
 
 ## 安装
 
-### macOS
+### macOS（Web UI，推荐）
 
-1. 打开 DMG，把 **万能转码.app** 拖到「应用程序」；
-2. 双击运行（本地 ad-hoc 签名，首次被拦截时右键 → 打开一次即可）。
+1. 解压 `AnyConvert-1.5.0-macOS-web.zip`；
+2. 双击包内 **安装依赖.command**（首次，安装 PyMuPDF 并下载 LibreOffice）；
+3. 双击 **万能转码.app**，浏览器自动打开本地界面；
+4. 首次被系统拦截时：右键 .app → 打开。
 
 ### Windows / Linux
 
-1. 解压 `AnyConvert-1.5.0-crossplatform.zip`；
+1. 解压对应包；
 2. 安装 Python 3.10+（Windows 勾选 Add to PATH）；
-3. `python -m pip install -r crossplatform/requirements.txt`；
-4. 准备引擎（三选一）：
-   - `python scripts/fetch_engines.py --all`（自动下载 LibreOffice，Linux 也支持）
-   - 使用系统已装的 FFmpeg / LibreOffice
-   - 把引擎放进 `crossplatform/vendor/`
-5. 启动：Windows 双击 `启动-Windows.bat`；Linux `bash 启动-Linux.sh`；macOS 双击 `启动-macOS.command`。
+3. Windows 双击 `安装依赖.bat`；Linux 执行 `bash install.sh`；
+4. 启动：Windows 双击 `启动-Windows.bat`；Linux `bash 启动-Linux.sh`。
 
-浏览器会自动打开本地界面（仅监听 127.0.0.1）。
+### macOS 原生版（可选）
+
+打开 DMG 把 **万能转码.app** 拖进「应用程序」。仅覆盖音视频与图片转换。
 
 ## 使用
 
