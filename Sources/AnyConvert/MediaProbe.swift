@@ -66,6 +66,10 @@ enum MediaProbe {
             if let name = format["format_name"] as? String { info.container = name }
         }
 
+        let imageContainers = ["image2", "png_pipe", "jpeg_pipe", "webp_pipe", "bmp_pipe",
+                               "tiff_pipe", "ico", "apng", "jpegxl_pipe"]
+        info.isImage = imageContainers.contains { info.container.contains($0) }
+
         if let streams = root["streams"] as? [[String: Any]] {
             for stream in streams {
                 let type = stream["codec_type"] as? String ?? ""
@@ -97,7 +101,7 @@ enum MediaProbe {
         }
 
         guard info.hasVideo || info.hasAudio else {
-            throw ConvertError.probeFailed("没有可转换的音视频轨")
+            throw ConvertError.probeFailed(L10n.t("msg.noTracks"))
         }
         return info
     }

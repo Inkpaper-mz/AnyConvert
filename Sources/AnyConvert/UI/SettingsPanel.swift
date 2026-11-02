@@ -77,7 +77,7 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
     private let stack = NSStackView()
 
     private let formatPopup = NSPopUpButton(frame: .zero, pullsDown: false)
-    private let qualityControl = NSSegmentedControl(labels: ["高质量", "标准", "小体积"],
+    private lazy var qualityControl = NSSegmentedControl(labels: Quality.allCases.map { $0.title },
                                                     trackingMode: .selectOne,
                                                     target: nil, action: nil)
     private let qualityHint = Label.make("", size: 10, color: .secondaryLabelColor)
@@ -86,22 +86,23 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
     private let resolutionTitle = Label.make("", size: 10, weight: .semibold, color: .secondaryLabelColor)
     private let bitratePopup = NSPopUpButton(frame: .zero, pullsDown: false)
     private let bitrateTitle = Label.make("", size: 10, weight: .semibold, color: .secondaryLabelColor)
-    private let hardwareSwitch = NSButton(checkboxWithTitle: "Apple 硬件加速", target: nil, action: nil)
+    private let hardwareSwitch = NSButton(checkboxWithTitle: L10n.t("settings.hardware"), target: nil, action: nil)
     private let hardwareHint = Label.make("", size: 10, color: .secondaryLabelColor)
-    private let radioAlongside = NSButton(radioButtonWithTitle: "与源文件相同文件夹", target: nil, action: nil)
-    private let radioCustom = NSButton(radioButtonWithTitle: "指定文件夹", target: nil, action: nil)
-    private let chooseDirButton = PillButton(title: "选择文件夹…")
+    private let radioAlongside = NSButton(radioButtonWithTitle: L10n.t("settings.alongside"), target: nil, action: nil)
+    private let radioCustom = NSButton(radioButtonWithTitle: L10n.t("settings.custom"), target: nil, action: nil)
+    private let chooseDirButton = PillButton(title: L10n.t("btn.choose"))
     private let pathLabel = Label.make("", size: 10, color: .secondaryLabelColor)
     private let chipsRow = NSStackView()
     private let divider = HairlineView()
     private let infoBox = CardView()
     private let customRow = NSStackView()
-    private let customHint = Label.make("留空则自动计算；同时填写会等比适配进该尺寸", size: 10, color: .secondaryLabelColor)
+    private let customHint = Label.make(L10n.t("settings.customHint"), size: 10, color: .secondaryLabelColor)
     private let widthField = NSTextField()
     private let heightField = NSTextField()
     private var chips: [String: ChipButton] = [:]
     private var videoViews: [NSView] = []
     private var bitrateViews: [NSView] = []
+    private var hardwareViews: [NSView] = []
 
     init() {
         super.init(frame: .zero)
@@ -131,7 +132,7 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         ])
 
         // 输出格式
-        section("输出格式")
+        section(L10n.t("settings.format"))
         formatPopup.target = self
         formatPopup.action = #selector(formatChanged)
         formatPopup.font = Theme.font(12)
@@ -144,7 +145,7 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         stack.setCustomSpacing(18, after: chipsRow)
 
         // 画质
-        qualityTitle.stringValue = "画质"
+        qualityTitle.stringValue = L10n.t("settings.quality")
         videoViews.append(qualityTitle)
         stack.addArrangedSubview(qualityTitle)
         qualityControl.target = self
@@ -159,7 +160,7 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         stack.setCustomSpacing(18, after: qualityHint)
 
         // 分辨率
-        resolutionTitle.stringValue = "分辨率"
+        resolutionTitle.stringValue = L10n.t("settings.resolution")
         videoViews.append(resolutionTitle)
         stack.addArrangedSubview(resolutionTitle)
         resolutionPopup.target = self
@@ -174,8 +175,8 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         stack.addArrangedSubview(resolutionPopup)
 
         // 自定义分辨率
-        configureSizeField(widthField, placeholder: "宽")
-        configureSizeField(heightField, placeholder: "高")
+        configureSizeField(widthField, placeholder: L10n.t("settings.width"))
+        configureSizeField(heightField, placeholder: L10n.t("settings.height"))
         let times = Label.make("×", size: 12, color: .secondaryLabelColor)
         let customSpacer = NSView()
         customSpacer.translatesAutoresizingMaskIntoConstraints = false
@@ -197,7 +198,7 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         stack.setCustomSpacing(18, after: customHint)
 
         // 音频码率
-        bitrateTitle.stringValue = "音频码率"
+        bitrateTitle.stringValue = L10n.t("settings.bitrate")
         bitrateViews.append(bitrateTitle)
         stack.addArrangedSubview(bitrateTitle)
         bitratePopup.target = self
@@ -217,6 +218,7 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         hardwareSwitch.action = #selector(hardwareChanged)
         hardwareSwitch.font = Theme.font(12)
         hardwareSwitch.translatesAutoresizingMaskIntoConstraints = false
+        hardwareViews = [hardwareSwitch, hardwareHint]
         stack.addArrangedSubview(hardwareSwitch)
         stack.addArrangedSubview(hardwareHint)
         stack.setCustomSpacing(18, after: hardwareHint)
@@ -226,7 +228,7 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         stack.setCustomSpacing(18, after: divider)
 
         // 输出位置
-        section("输出位置")
+        section(L10n.t("settings.output"))
         radioAlongside.target = self
         radioAlongside.action = #selector(outputModeChanged(_:))
         radioCustom.target = self
@@ -250,7 +252,7 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         infoBox.fill = Theme.accent.withAlphaComponent(0.07)
         infoBox.stroke = Theme.accent.withAlphaComponent(0.12)
         infoBox.translatesAutoresizingMaskIntoConstraints = false
-        let infoLabel = Label.make("支持 300+ 种输入格式。视频转音频会自动提取音轨，例如 MP4 → MP3。",
+        let infoLabel = Label.make(L10n.t("settings.info"),
                                    size: 10.5, color: .secondaryLabelColor)
         infoLabel.lineBreakMode = .byWordWrapping
         infoLabel.maximumNumberOfLines = 0
@@ -295,7 +297,7 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         chipsRow.spacing = 6
         chipsRow.alignment = .centerY
         chipsRow.translatesAutoresizingMaskIntoConstraints = false
-        for id in ["mp4", "mp3", "gif", "flac"] {
+        for id in ["mp4", "mp3", "png", "gif"] {
             let chip = ChipButton(title: id.uppercased())
             chip.target = self
             chip.action = #selector(chipTapped(_:))
@@ -311,15 +313,43 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
     private func buildFormatMenu() {
         let menu = NSMenu()
         menu.font = Theme.font(12)
-        for format in Catalog.videoFormats {
-            let item = NSMenuItem(title: format.menuLabel, action: nil, keyEquivalent: "")
+
+        func header(_ title: String) {
+            let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+            item.isEnabled = false
+            item.tag = -1
+            item.attributedTitle = NSAttributedString(
+                string: title,
+                attributes: [
+                    .font: Theme.font(9.5, .semibold),
+                    .foregroundColor: NSColor.secondaryLabelColor,
+                ]
+            )
             menu.addItem(item)
         }
-        menu.addItem(NSMenuItem.separator())
-        for format in Catalog.audioFormats {
-            let item = NSMenuItem(title: format.menuLabel, action: nil, keyEquivalent: "")
+
+        func add(_ formats: [OutputFormat]) {
+            for format in formats {
+                let item = NSMenuItem(title: format.menuLabel, action: nil, keyEquivalent: "")
+                item.tag = Catalog.all.firstIndex(where: { $0.id == format.id }) ?? -1
+                menu.addItem(item)
+            }
+        }
+
+        func separator() {
+            let item = NSMenuItem.separator()
+            item.tag = -1
             menu.addItem(item)
         }
+
+        header(L10n.t("group.video"))
+        add(Catalog.videoFormats)
+        separator()
+        header(L10n.t("group.audio"))
+        add(Catalog.audioFormats)
+        separator()
+        header(L10n.t("group.image"))
+        add(Catalog.imageFormats)
         formatPopup.menu = menu
     }
 
@@ -332,18 +362,17 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         let running = model.isRunning
 
         if let catalogIndex = Catalog.all.firstIndex(where: { $0.id == format.id }) {
-            let menuIndex = catalogIndex < Catalog.videoFormats.count ? catalogIndex : catalogIndex + 1
-            if menuIndex >= 0, menuIndex < formatPopup.numberOfItems {
-                formatPopup.selectItem(at: menuIndex)
-            }
+            _ = formatPopup.selectItem(withTag: catalogIndex)
         }
         for (id, chip) in chips {
             chip.isSelected = (id == format.id)
             chip.isEnabled = !running
         }
 
-        for view in videoViews { view.isHidden = !isVideo }
-        for view in bitrateViews { view.isHidden = format.lossless }
+        let showSizeControls = isVideo || format.isImage
+        for view in videoViews { view.isHidden = !showSizeControls }
+        for view in bitrateViews { view.isHidden = format.lossless || format.isImage }
+        for view in hardwareViews { view.isHidden = format.kind != .video }
 
         qualityControl.selectedSegment = Quality.allCases.firstIndex(of: model.quality) ?? 1
         qualityHint.stringValue = model.quality.detail
@@ -365,14 +394,14 @@ final class SettingsPanel: NSView, NSTextFieldDelegate {
         hardwareSwitch.state = model.hardware ? .on : .off
         hardwareSwitch.isEnabled = model.hardwareAvailable && isVideo && !running
         hardwareHint.stringValue = model.hardwareAvailable
-            ? (isVideo ? "VideoToolbox 编码 H.264，更快更省电" : "仅视频格式可用")
-            : "当前环境不支持 VideoToolbox"
+            ? (isVideo ? L10n.t("settings.hwHint") : L10n.t("settings.hwVideoOnly"))
+            : L10n.t("settings.hwUnsupported")
 
         radioAlongside.state = model.outputMode == .alongside ? .on : .off
         radioCustom.state = model.outputMode == .custom ? .on : .off
         chooseDirButton.isHidden = model.outputMode != .custom
         pathLabel.isHidden = model.outputMode != .custom
-        pathLabel.stringValue = model.customDirectory?.path ?? "尚未选择文件夹"
+        pathLabel.stringValue = model.customDirectory?.path ?? L10n.t("settings.noFolder")
         pathLabel.toolTip = model.customDirectory?.path
 
         formatPopup.isEnabled = !running

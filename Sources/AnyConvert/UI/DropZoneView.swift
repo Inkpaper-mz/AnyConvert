@@ -58,17 +58,17 @@ final class DropZoneView: NSView {
             iconHost.heightAnchor.constraint(equalToConstant: 38),
         ])
 
-        let title = Label.make("把视频 / 音频拖到这里", size: 14, weight: .medium)
+        let title = Label.make(L10n.t("drop.title"), size: 14, weight: .medium)
         title.alignment = .center
-        let subtitle = Label.make("支持 MP4、MKV、MOV、AVI、MP3、FLAC、WAV、M4A 等几乎所有格式", size: 11, color: .secondaryLabelColor)
+        let subtitle = Label.make(L10n.t("drop.subtitle"), size: 11, color: .secondaryLabelColor)
         subtitle.alignment = .center
         subtitle.lineBreakMode = .byTruncatingTail
 
-        let pick = GradientButton(title: "选择文件", symbol: "plus", large: false)
+        let pick = GradientButton(title: L10n.t("btn.chooseFiles"), symbol: "plus", large: false)
         pick.target = self
         pick.action = #selector(handlePickFiles)
 
-        let folder = PillButton(title: "选择文件夹")
+        let folder = PillButton(title: L10n.t("btn.chooseFolder"))
         folder.target = self
         folder.action = #selector(handlePickFolder)
 
@@ -102,11 +102,11 @@ final class DropZoneView: NSView {
         plus.widthAnchor.constraint(equalToConstant: 16).isActive = true
         plus.heightAnchor.constraint(equalToConstant: 16).isActive = true
 
-        let hint = Label.make("继续拖入文件，或", size: 12, color: .secondaryLabelColor)
-        let pick = LinkButton(title: "选择文件")
+        let hint = Label.make(L10n.t("drop.continue"), size: 12, color: .secondaryLabelColor)
+        let pick = LinkButton(title: L10n.t("btn.chooseFiles"))
         pick.target = self
         pick.action = #selector(handlePickFiles)
-        let folder = LinkButton(title: "文件夹")
+        let folder = LinkButton(title: L10n.t("btn.chooseFolder"))
         folder.target = self
         folder.action = #selector(handlePickFolder)
 
@@ -147,11 +147,12 @@ final class DropZoneView: NSView {
     }
 
     func setCompact(_ compact: Bool, fileCount: Int) {
-        guard compact != isCompact || countLabel.stringValue != "\(fileCount) 个文件" else { return }
+        let countText = L10n.t("drop.files", fileCount)
+        guard compact != isCompact || countLabel.stringValue != countText else { return }
         isCompact = compact
         emptyStack.isHidden = compact
         compactStack.isHidden = !compact
-        countLabel.stringValue = "\(fileCount) 个文件"
+        countLabel.stringValue = L10n.t("drop.files", fileCount)
         heightConstraint?.constant = compact ? 52 : 214
         needsDisplay = true
     }

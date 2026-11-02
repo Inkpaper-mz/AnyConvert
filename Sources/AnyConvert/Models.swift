@@ -5,57 +5,77 @@ import Foundation
 enum MediaKind: String, Codable {
     case video
     case audio
+    case image
 }
 
 struct OutputFormat: Identifiable, Hashable {
     let id: String
     let title: String
-    let subtitle: String
+    let subtitleKey: String
     let ext: String
     let kind: MediaKind
     let lossless: Bool
-    /// 该格式是否真的带视频轨（GIF 特殊处理）
-    var isAnimatedImage: Bool { id == "gif" }
 
+    var subtitle: String { L10n.t(subtitleKey) }
     var menuLabel: String { "\(title)  ·  \(subtitle)" }
+    var isAnimatedImage: Bool { id == "gif" }
+    var isImage: Bool { kind == .image }
 }
 
 enum Catalog {
     static let videoFormats: [OutputFormat] = [
-        .init(id: "mp4",  title: "MP4",   subtitle: "H.264 + AAC · 最通用", ext: "mp4",  kind: .video, lossless: false),
-        .init(id: "mov",  title: "MOV",   subtitle: "H.264 + AAC · 苹果",   ext: "mov",  kind: .video, lossless: false),
-        .init(id: "m4v",  title: "M4V",   subtitle: "H.264 + AAC · iTunes", ext: "m4v",  kind: .video, lossless: false),
-        .init(id: "mkv",  title: "MKV",   subtitle: "H.264 + AAC · 高兼容", ext: "mkv",  kind: .video, lossless: false),
-        .init(id: "webm", title: "WebM",  subtitle: "VP9 + Opus · 网页",    ext: "webm", kind: .video, lossless: false),
-        .init(id: "avi",  title: "AVI",   subtitle: "MPEG-4 + MP3 · 老设备", ext: "avi", kind: .video, lossless: false),
-        .init(id: "wmv",  title: "WMV",   subtitle: "WMV2 + WMA · Windows",  ext: "wmv",  kind: .video, lossless: false),
-        .init(id: "flv",  title: "FLV",   subtitle: "H.264 + AAC · 旧网页",  ext: "flv",  kind: .video, lossless: false),
-        .init(id: "ts",   title: "TS",    subtitle: "H.264 + AAC · 电视",    ext: "ts",   kind: .video, lossless: false),
-        .init(id: "mpg",  title: "MPG",   subtitle: "MPEG-2 + MP2 · 老播放器", ext: "mpg", kind: .video, lossless: false),
-        .init(id: "3gp",  title: "3GP",   subtitle: "H.264 + AAC · 手机",    ext: "3gp",  kind: .video, lossless: false),
-        .init(id: "ogv",  title: "OGV",   subtitle: "Theora + Vorbis · 开源", ext: "ogv", kind: .video, lossless: false),
-        .init(id: "gif",  title: "GIF",   subtitle: "动图 · 无声音",          ext: "gif",  kind: .video, lossless: false),
+        .init(id: "mp4",  title: "MP4",   subtitleKey: "fmt.mp4.sub",  ext: "mp4",  kind: .video, lossless: false),
+        .init(id: "mov",  title: "MOV",   subtitleKey: "fmt.mov.sub",  ext: "mov",  kind: .video, lossless: false),
+        .init(id: "m4v",  title: "M4V",   subtitleKey: "fmt.m4v.sub",  ext: "m4v",  kind: .video, lossless: false),
+        .init(id: "mkv",  title: "MKV",   subtitleKey: "fmt.mkv.sub",  ext: "mkv",  kind: .video, lossless: false),
+        .init(id: "webm", title: "WebM",  subtitleKey: "fmt.webm.sub", ext: "webm", kind: .video, lossless: false),
+        .init(id: "avi",  title: "AVI",   subtitleKey: "fmt.avi.sub",  ext: "avi",  kind: .video, lossless: false),
+        .init(id: "wmv",  title: "WMV",   subtitleKey: "fmt.wmv.sub",  ext: "wmv",  kind: .video, lossless: false),
+        .init(id: "flv",  title: "FLV",   subtitleKey: "fmt.flv.sub",  ext: "flv",  kind: .video, lossless: false),
+        .init(id: "ts",   title: "TS",    subtitleKey: "fmt.ts.sub",   ext: "ts",   kind: .video, lossless: false),
+        .init(id: "mpg",  title: "MPG",   subtitleKey: "fmt.mpg.sub",  ext: "mpg",  kind: .video, lossless: false),
+        .init(id: "3gp",  title: "3GP",   subtitleKey: "fmt.3gp.sub",  ext: "3gp",  kind: .video, lossless: false),
+        .init(id: "ogv",  title: "OGV",   subtitleKey: "fmt.ogv.sub",  ext: "ogv",  kind: .video, lossless: false),
+        .init(id: "gif",  title: "GIF",   subtitleKey: "fmt.gif.sub",  ext: "gif",  kind: .video, lossless: false),
     ]
 
     static let audioFormats: [OutputFormat] = [
-        .init(id: "mp3",  title: "MP3",  subtitle: "最通用的音频",   ext: "mp3",  kind: .audio, lossless: false),
-        .init(id: "m4a",  title: "M4A",  subtitle: "AAC · 苹果设备", ext: "m4a",  kind: .audio, lossless: false),
-        .init(id: "aac",  title: "AAC",  subtitle: "裸流 ADTS",      ext: "aac",  kind: .audio, lossless: false),
-        .init(id: "wav",  title: "WAV",  subtitle: "PCM 无损",       ext: "wav",  kind: .audio, lossless: true),
-        .init(id: "flac", title: "FLAC", subtitle: "无损压缩",       ext: "flac", kind: .audio, lossless: true),
-        .init(id: "alac", title: "ALAC", subtitle: "苹果无损",       ext: "m4a",  kind: .audio, lossless: true),
-        .init(id: "ogg",  title: "OGG",  subtitle: "Vorbis",         ext: "ogg",  kind: .audio, lossless: false),
-        .init(id: "opus", title: "OPUS", subtitle: "高效压缩",       ext: "opus", kind: .audio, lossless: false),
-        .init(id: "wma",  title: "WMA",  subtitle: "Windows 音频",   ext: "wma",  kind: .audio, lossless: false),
-        .init(id: "aiff", title: "AIFF", subtitle: "PCM 无损",       ext: "aiff", kind: .audio, lossless: true),
-        .init(id: "ac3",  title: "AC3",  subtitle: "杜比数字",       ext: "ac3",  kind: .audio, lossless: false),
-        .init(id: "caf",  title: "CAF",  subtitle: "苹果音频容器",   ext: "caf",  kind: .audio, lossless: false),
+        .init(id: "mp3",  title: "MP3",  subtitleKey: "fmt.mp3.sub",  ext: "mp3",  kind: .audio, lossless: false),
+        .init(id: "m4a",  title: "M4A",  subtitleKey: "fmt.m4a.sub",  ext: "m4a",  kind: .audio, lossless: false),
+        .init(id: "aac",  title: "AAC",  subtitleKey: "fmt.aac.sub",  ext: "aac",  kind: .audio, lossless: false),
+        .init(id: "wav",  title: "WAV",  subtitleKey: "fmt.wav.sub",  ext: "wav",  kind: .audio, lossless: true),
+        .init(id: "flac", title: "FLAC", subtitleKey: "fmt.flac.sub", ext: "flac", kind: .audio, lossless: true),
+        .init(id: "alac", title: "ALAC", subtitleKey: "fmt.alac.sub", ext: "m4a",  kind: .audio, lossless: true),
+        .init(id: "ogg",  title: "OGG",  subtitleKey: "fmt.ogg.sub",  ext: "ogg",  kind: .audio, lossless: false),
+        .init(id: "opus", title: "OPUS", subtitleKey: "fmt.opus.sub", ext: "opus", kind: .audio, lossless: false),
+        .init(id: "wma",  title: "WMA",  subtitleKey: "fmt.wma.sub",  ext: "wma",  kind: .audio, lossless: false),
+        .init(id: "aiff", title: "AIFF", subtitleKey: "fmt.aiff.sub", ext: "aiff", kind: .audio, lossless: true),
+        .init(id: "ac3",  title: "AC3",  subtitleKey: "fmt.ac3.sub",  ext: "ac3",  kind: .audio, lossless: false),
+        .init(id: "caf",  title: "CAF",  subtitleKey: "fmt.caf.sub",  ext: "caf",  kind: .audio, lossless: false),
     ]
 
-    static let all: [OutputFormat] = videoFormats + audioFormats
+    static let imageFormats: [OutputFormat] = [
+        .init(id: "jpg",  title: "JPG",  subtitleKey: "fmt.jpg.sub",  ext: "jpg",  kind: .image, lossless: false),
+        .init(id: "png",  title: "PNG",  subtitleKey: "fmt.png.sub",  ext: "png",  kind: .image, lossless: true),
+        .init(id: "webp", title: "WebP", subtitleKey: "fmt.webp.sub", ext: "webp", kind: .image, lossless: false),
+        .init(id: "avif", title: "AVIF", subtitleKey: "fmt.avif.sub", ext: "avif", kind: .image, lossless: false),
+        .init(id: "tiff", title: "TIFF", subtitleKey: "fmt.tiff.sub", ext: "tiff", kind: .image, lossless: true),
+        .init(id: "bmp",  title: "BMP",  subtitleKey: "fmt.bmp.sub",  ext: "bmp",  kind: .image, lossless: true),
+        .init(id: "ico",  title: "ICO",  subtitleKey: "fmt.ico.sub",  ext: "ico",  kind: .image, lossless: true),
+    ]
+
+    static let all: [OutputFormat] = videoFormats + audioFormats + imageFormats
 
     static func format(_ id: String) -> OutputFormat {
         all.first { $0.id == id } ?? videoFormats[0]
+    }
+
+    static func formats(for kind: MediaKind) -> [OutputFormat] {
+        switch kind {
+        case .video: return videoFormats
+        case .audio: return audioFormats
+        case .image: return imageFormats
+        }
     }
 }
 
@@ -66,44 +86,40 @@ enum Quality: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
-    var title: String {
-        switch self {
-        case .high: return "高质量"
-        case .balanced: return "标准"
-        case .small: return "小体积"
-        }
-    }
-
-    var detail: String {
-        switch self {
-        case .high: return "接近原片，文件较大"
-        case .balanced: return "画质与体积均衡"
-        case .small: return "适合分享与传输"
-        }
-    }
+    var title: String { L10n.t("quality.\(rawValue)") }
+    var detail: String { L10n.t("quality.\(rawValue).detail") }
 
     var x264CRF: Int {
         switch self { case .high: return 18; case .balanced: return 23; case .small: return 28 }
     }
-
     var x265CRF: Int {
         switch self { case .high: return 22; case .balanced: return 27; case .small: return 32 }
     }
-
     var vp9CRF: Int {
         switch self { case .high: return 24; case .balanced: return 32; case .small: return 40 }
     }
-
     var theoraQuality: Int {
         switch self { case .high: return 8; case .balanced: return 6; case .small: return 4 }
     }
-
     var mpegQuality: Int {
         switch self { case .high: return 2; case .balanced: return 4; case .small: return 8 }
     }
-
     var hardwareBitrate: String {
         switch self { case .high: return "12M"; case .balanced: return "6M"; case .small: return "3M" }
+    }
+
+    // 图片编码参数
+    var jpegQuality: Int {
+        switch self { case .high: return 2; case .balanced: return 4; case .small: return 8 }
+    }
+    var pngLevel: Int {
+        switch self { case .high: return 9; case .balanced: return 6; case .small: return 3 }
+    }
+    var webpQuality: Int {
+        switch self { case .high: return 92; case .balanced: return 82; case .small: return 68 }
+    }
+    var avifCRF: Int {
+        switch self { case .high: return 20; case .balanced: return 28; case .small: return 36 }
     }
 }
 
@@ -114,17 +130,16 @@ enum ResolutionPreset: String, CaseIterable, Identifiable, Codable {
 
     var title: String {
         switch self {
-        case .original: return "保持原始"
-        case .uhd4k: return "4K"
-        case .fhd1080: return "1080p"
-        case .hd720: return "720p"
-        case .sd480: return "480p"
-        case .sd360: return "360p"
-        case .custom: return "自定义…"
+        case .original: return L10n.t("res.original")
+        case .uhd4k: return L10n.t("res.4k")
+        case .fhd1080: return L10n.t("res.1080")
+        case .hd720: return L10n.t("res.720")
+        case .sd480: return L10n.t("res.480")
+        case .sd360: return L10n.t("res.360")
+        case .custom: return L10n.t("res.custom")
         }
     }
 
-    /// 目标高度；nil 表示不缩放
     var height: Int? {
         switch self {
         case .original: return nil
@@ -163,6 +178,7 @@ struct MediaInfo: Codable, Equatable {
     var height: Int = 0
     var hasVideo: Bool = false
     var hasAudio: Bool = false
+    var isImage: Bool = false
     var videoCodec: String = ""
     var audioCodec: String = ""
     var container: String = ""
@@ -186,12 +202,12 @@ struct Job: Identifiable {
 
         var label: String {
             switch self {
-            case .waiting: return "等待"
-            case .probing: return "分析中"
-            case .running: return "转换中"
-            case .done: return "完成"
-            case .failed: return "失败"
-            case .cancelled: return "已取消"
+            case .waiting: return L10n.t("status.waiting")
+            case .probing: return L10n.t("status.probing")
+            case .running: return L10n.t("status.running")
+            case .done: return L10n.t("status.done")
+            case .failed: return L10n.t("status.failed")
+            case .cancelled: return L10n.t("status.cancelled")
             }
         }
     }
@@ -211,9 +227,9 @@ struct Job: Identifiable {
     var fileSize: String {
         let bytes = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)??.int64Value ?? 0
         guard bytes > 0 else { return "—" }
-        let f = ByteCountFormatter()
-        f.countStyle = .file
-        return f.string(fromByteCount: bytes)
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: bytes)
     }
 
     var durationText: String {
@@ -246,23 +262,26 @@ enum ConvertError: LocalizedError {
     case probeFailed(String)
     case noAudioTrack
     case noVideoTrack
+    case imageNeedsImageFormat
     case encodeFailed(String)
     case cancelled
 
     var errorDescription: String? {
         switch self {
         case .toolchainMissing:
-            return "找不到 FFmpeg 引擎，请重新安装本应用。"
+            return L10n.t("msg.noEngine")
         case .probeFailed(let detail):
-            return "无法识别的媒体文件：\(detail)"
+            return L10n.t("msg.probeFail", detail)
         case .noAudioTrack:
-            return "该文件没有音频轨，无法转换为音频。"
+            return L10n.t("msg.noAudio")
         case .noVideoTrack:
-            return "该文件没有视频轨，无法转换为视频。"
+            return L10n.t("msg.noVideo")
+        case .imageNeedsImageFormat:
+            return L10n.t("msg.imageOnly")
         case .encodeFailed(let detail):
             return detail
         case .cancelled:
-            return "已取消"
+            return L10n.t("msg.cancelled")
         }
     }
 }

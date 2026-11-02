@@ -56,6 +56,16 @@ enum SelfTest {
             return false
         }
 
+        // 静态图片素材（用于图片→图片测试）
+        let stillImage = workDir.appendingPathComponent("still.png")
+        let still = Process()
+        still.executableURL = ffmpeg
+        still.arguments = ["-hide_banner", "-loglevel", "error", "-y", "-i", sample.path,
+                           "-frames:v", "1", "-update", "1", stillImage.path]
+        still.standardError = Pipe()
+        try? still.run()
+        still.waitUntilExit()
+
         guard let info = try? MediaProbe.probeSync(sample) else {
             print("✗ 无法解析测试素材")
             return false
@@ -108,6 +118,31 @@ enum SelfTest {
             }
         }
 
+        // 3b. 图片 → 图片
+        var imageFailures: [String] = []
+        if still.terminationStatus == 0 {
+            for format in Catalog.imageFormats {
+                let output = workDir.appendingPathComponent("img-\(format.id).\(format.ext)")
+                let settings = ConversionSettings(format: format, quality: .small, resolution: .original,
+                                                  audioBitrate: .b128, hardware: false)
+                let args = CommandBuilder.arguments(settings: settings, input: stillImage, output: output, info: info)
+                do {
+                    try await Engine.shared.run(arguments: args, duration: 0) { _, _ in }
+                    let size = ((try? fm.attributesOfItem(atPath: output.path)[.size]) as? NSNumber)?.int64Value ?? 0
+                    let produced = try MediaProbe.probeSync(output)
+                    if size > 0, produced.hasVideo, produced.width > 0 {
+                        print(String(format: "✓ png → %-4@ %6lld KB  %@", format.id, size / 1024, produced.resolutionText))
+                    } else {
+                        imageFailures.append(format.id)
+                        print("✗ png → \(format.id) 输出无效")
+                    }
+                } catch {
+                    imageFailures.append(format.id)
+                    print("✗ png → \(format.id) 失败：\(error.localizedDescription)")
+                }
+            }
+        }
+
         // 4. 硬件编码（可选，失败不算致命）
         if Toolchain.supportsVideoToolbox() {
             let output = workDir.appendingPathComponent("hw.mp4")
@@ -123,11 +158,12 @@ enum SelfTest {
         }
 
         print("--------------------------------")
-        if failures.isEmpty && argFailures == 0 {
-            print("结果：全部通过 ✅  （\(targets.count) 种格式）")
+        let allFailures = failures + imageFailures
+        if allFailures.isEmpty && argFailures == 0 {
+            print("结果：全部通过 ✅  （\(targets.count) 种格式 + 图片互转 \(Catalog.imageFormats.count) 项）")
             return true
         }
-        print("结果：失败 \(failures.count) 项 → \(failures.joined(separator: ", "))")
+        print("结果：失败 \(allFailures.count) 项 → \(allFailures.joined(separator: ", "))")
         return false
     }
 }

@@ -21,33 +21,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var window: NSWindow?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
-        acLog("willFinishLaunching")
+        L10n.bootstrap()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        acLog("didFinishLaunching")
         buildMainMenu()
-        acLog("menu built")
 
-        acLog("before RootView")
         let root = RootView(frame: NSRect(x: 0, y: 0, width: 1060, height: 720))
-        acLog("after RootView")
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1060, height: 720),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
-        acLog("window created")
-        window.title = "万能转码"
+        window.title = L10n.t("app.title")
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.isMovableByWindowBackground = false
         window.minSize = NSSize(width: 960, height: 640)
         window.contentView = root
         window.center()
         window.setFrameAutosaveName("AnyConvertMainWindow")
-        acLog("window frame before show: \(window.frame) screen=\(String(describing: window.screen?.frame))")
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
         self.window = window
@@ -80,8 +73,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // 调试用：--demo <文件...> [--autostart]
+        // 调试用：--quit-after <秒> 自动退出（用于自动化截图）
         let args = CommandLine.arguments
+        if let quitIndex = args.firstIndex(of: "--quit-after"), quitIndex + 1 < args.count,
+           let seconds = Double(args[quitIndex + 1]) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
+                MainActor.assumeIsolated { NSApp.terminate(nil) }
+            }
+        }
+
+        // 调试用：--format <id> 启动时选中格式
+        if let formatIndex = args.firstIndex(of: "--format"), formatIndex + 1 < args.count {
+            let formatID = args[formatIndex + 1]
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                MainActor.assumeIsolated { AppModel.shared.setFormat(formatID) }
+            }
+        }
+
+        // 调试用：--demo <文件...> [--autostart]
         if let demoIndex = args.firstIndex(of: "--demo") {
             let files = args[(demoIndex + 1)...].filter { !$0.hasPrefix("--") }
             let autostart = args.contains("--autostart")
@@ -97,7 +106,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
-        acLog("after show: visible=\(window.isVisible) key=\(window.isKeyWindow) windows=\(NSApp.windows.count) frame=\(window.frame)")
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -107,80 +115,138 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - 菜单
 
     private func buildMainMenu() {
+        let appName = L10n.t("app.title")
         let mainMenu = NSMenu()
 
         // 应用菜单
         let appMenuItem = NSMenuItem()
         mainMenu.addItem(appMenuItem)
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "关于 万能转码", action: #selector(showAbout), keyEquivalent: "")
+
+        let aboutItem = NSMenuItem(title: L10n.t("menu.about", appName), action: #selector(showAbout), keyEquivalent: "")
+        aboutItem.target = self
+        appMenu.addItem(aboutItem)
         appMenu.addItem(NSMenuItem.separator())
-        appMenu.addItem(withTitle: "隐藏 万能转码", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
-        appMenu.addItem(withTitle: "隐藏其他", action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h")
-        appMenu.items.last?.keyEquivalentModifierMask = [.command, .option]
-        appMenu.addItem(withTitle: "显示全部", action: #selector(NSApplication.unhideAllApplications(_:)), keyEquivalent: "")
-        appMenu.addItem(NSMenuItem.separator())
-        appMenu.addItem(withTitle: "退出 万能转码", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        for item in appMenu.items where item.action == #selector(showAbout) {
+
+        let languageItem = NSMenuItem(title: L10n.t("menu.language"), action: nil, keyEquivalent: "")
+        let languageMenu = NSMenu(title: L10n.t("menu.language"))
+        for (index, language) in L10n.Language.allCases.enumerated() {
+            let item = NSMenuItem(title: L10n.displayName(of: language),
+                                  action: #selector(languageSelected(_:)), keyEquivalent: "")
+            item.tag = index
             item.target = self
+            item.state = (L10n.preferred == language) ? .on : .off
+            languageMenu.addItem(item)
         }
+        languageItem.submenu = languageMenu
+        appMenu.addItem(languageItem)
+        appMenu.addItem(NSMenuItem.separator())
+
+        appMenu.addItem(withTitle: L10n.t("menu.hide", appName), action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        let hideOthers = NSMenuItem(title: L10n.t("menu.hideOthers"), action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h")
+        hideOthers.keyEquivalentModifierMask = [.command, .option]
+        appMenu.addItem(hideOthers)
+        appMenu.addItem(withTitle: L10n.t("menu.showAll"), action: #selector(NSApplication.unhideAllApplications(_:)), keyEquivalent: "")
+        appMenu.addItem(NSMenuItem.separator())
+        appMenu.addItem(withTitle: L10n.t("menu.quit", appName), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appMenuItem.submenu = appMenu
 
         // 文件菜单
         let fileItem = NSMenuItem()
         mainMenu.addItem(fileItem)
-        let fileMenu = NSMenu(title: "文件")
-        fileMenu.addItem(withTitle: "添加文件…", action: #selector(addFiles), keyEquivalent: "o")
-        let addFolder = NSMenuItem(title: "添加文件夹…", action: #selector(addFolder), keyEquivalent: "o")
+        let fileMenu = NSMenu(title: L10n.t("menu.file"))
+        let addFiles = NSMenuItem(title: L10n.t("menu.addFiles"), action: #selector(addFiles), keyEquivalent: "o")
+        addFiles.target = self
+        fileMenu.addItem(addFiles)
+        let addFolder = NSMenuItem(title: L10n.t("menu.addFolder"), action: #selector(addFolder), keyEquivalent: "o")
         addFolder.keyEquivalentModifierMask = [.command, .shift]
+        addFolder.target = self
         fileMenu.addItem(addFolder)
         fileMenu.addItem(NSMenuItem.separator())
-        fileMenu.addItem(withTitle: "在 Finder 中打开输出文件夹", action: #selector(openOutputFolder), keyEquivalent: "r")
-        fileMenu.items.last?.keyEquivalentModifierMask = [.command, .shift]
+        let openOutput = NSMenuItem(title: L10n.t("menu.openOutput"), action: #selector(openOutputFolder), keyEquivalent: "r")
+        openOutput.keyEquivalentModifierMask = [.command, .shift]
+        openOutput.target = self
+        fileMenu.addItem(openOutput)
         fileMenu.addItem(NSMenuItem.separator())
-        fileMenu.addItem(withTitle: "关闭窗口", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
-        for item in fileMenu.items where item.target == nil && item.action != #selector(NSWindow.performClose(_:)) {
-            item.target = self
-        }
+        let closeWindow = NSMenuItem(title: L10n.t("menu.closeWindow"), action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        fileMenu.addItem(closeWindow)
         fileItem.submenu = fileMenu
 
         // 编辑菜单
         let editItem = NSMenuItem()
         mainMenu.addItem(editItem)
-        let editMenu = NSMenu(title: "编辑")
-        editMenu.addItem(withTitle: "撤销", action: Selector(("undo:")), keyEquivalent: "z")
-        editMenu.addItem(withTitle: "重做", action: Selector(("redo:")), keyEquivalent: "Z")
+        let editMenu = NSMenu(title: L10n.t("menu.edit"))
+        editMenu.addItem(withTitle: L10n.t("menu.undo"), action: Selector(("undo:")), keyEquivalent: "z")
+        editMenu.addItem(withTitle: L10n.t("menu.redo"), action: Selector(("redo:")), keyEquivalent: "Z")
         editMenu.addItem(NSMenuItem.separator())
-        editMenu.addItem(withTitle: "剪切", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
-        editMenu.addItem(withTitle: "拷贝", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-        editMenu.addItem(withTitle: "粘贴", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
-        editMenu.addItem(withTitle: "全选", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        editMenu.addItem(withTitle: L10n.t("menu.cut"), action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: L10n.t("menu.copy"), action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: L10n.t("menu.paste"), action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: L10n.t("menu.selectAll"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         editItem.submenu = editMenu
 
         // 转换菜单
         let convertItem = NSMenuItem()
         mainMenu.addItem(convertItem)
-        let convertMenu = NSMenu(title: "转换")
-        convertMenu.addItem(withTitle: "开始转换", action: #selector(startConversion), keyEquivalent: "\r")
-        convertMenu.addItem(withTitle: "取消转换", action: #selector(cancelConversion), keyEquivalent: ".")
+        let convertMenu = NSMenu(title: L10n.t("menu.convert"))
+        let start = NSMenuItem(title: L10n.t("menu.start"), action: #selector(startConversion), keyEquivalent: "\r")
+        start.target = self
+        convertMenu.addItem(start)
+        let cancel = NSMenuItem(title: L10n.t("menu.cancel"), action: #selector(cancelConversion), keyEquivalent: ".")
+        cancel.target = self
+        convertMenu.addItem(cancel)
         convertMenu.addItem(NSMenuItem.separator())
-        convertMenu.addItem(withTitle: "清空列表", action: #selector(clearList), keyEquivalent: "")
-        for item in convertMenu.items where item.action != nil {
-            item.target = self
-        }
+        let clear = NSMenuItem(title: L10n.t("menu.clearList"), action: #selector(clearList), keyEquivalent: "")
+        clear.target = self
+        convertMenu.addItem(clear)
         convertItem.submenu = convertMenu
 
         // 窗口菜单
         let windowItem = NSMenuItem()
         mainMenu.addItem(windowItem)
-        let windowMenu = NSMenu(title: "窗口")
-        windowMenu.addItem(withTitle: "最小化", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
-        windowMenu.addItem(withTitle: "缩放", action: #selector(NSWindow.performZoom(_:)), keyEquivalent: "")
+        let windowMenu = NSMenu(title: L10n.t("menu.window"))
+        windowMenu.addItem(withTitle: L10n.t("menu.minimize"), action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
+        windowMenu.addItem(withTitle: L10n.t("menu.zoom"), action: #selector(NSWindow.performZoom(_:)), keyEquivalent: "")
         windowItem.submenu = windowMenu
         NSApp.windowsMenu = windowMenu
 
         NSApp.mainMenu = mainMenu
     }
+
+    // MARK: - 语言
+
+    @objc private func languageSelected(_ sender: NSMenuItem) {
+        let languages = L10n.Language.allCases
+        guard sender.tag >= 0, sender.tag < languages.count else { return }
+        let chosen = languages[sender.tag]
+        guard chosen != L10n.preferred else { return }
+        L10n.setLanguage(chosen)
+
+        let alert = NSAlert()
+        alert.messageText = L10n.t("lang.restartTitle")
+        alert.informativeText = L10n.t("lang.restartBody")
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: L10n.t("btn.restart"))
+        alert.addButton(withTitle: L10n.t("btn.later"))
+        if alert.runModal() == .alertFirstButtonReturn {
+            relaunch()
+        }
+    }
+
+    private func relaunch() {
+        let url = Bundle.main.bundleURL
+        guard url.pathExtension == "app" else {
+            NSApp.terminate(nil)
+            return
+        }
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(at: url, configuration: configuration) { _, _ in
+            DispatchQueue.main.async { NSApp.terminate(nil) }
+        }
+    }
+
+    // MARK: - 其他
 
     private func focusFirstTextField(in view: NSView) -> Bool {
         for subview in view.subviews {
@@ -205,15 +271,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func showAbout() {
         let alert = NSAlert()
-        alert.messageText = "万能转码 1.0"
-        alert.informativeText = """
-        基于 FFmpeg 的视频 / 音频格式转换工具，支持 25 种输出格式与几乎所有输入格式。
-
-        交互界面：MIT License
-        转码引擎：FFmpeg（GPL v3）
-        """
+        alert.messageText = L10n.t("about.title")
+        alert.informativeText = L10n.t("about.body")
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "好")
+        alert.addButton(withTitle: L10n.t("btn.ok"))
         alert.runModal()
     }
 

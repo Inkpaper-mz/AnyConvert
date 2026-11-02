@@ -22,6 +22,17 @@ enum CommandBuilder {
             return args
         }
 
+        if fmt.kind == .image {
+            guard info.hasVideo else { return args }
+            args += ["-map", "0:v:0", "-an"]
+            if let filter = imageFilter(settings: settings, info: info, format: fmt) {
+                args += ["-vf", filter]
+            }
+            args += imageArguments(settings: settings)
+            args += ["-frames:v", "1", "-update", "1", "-map_metadata", "0", output.path]
+            return args
+        }
+
         if fmt.kind == .video {
             guard info.hasVideo else { return args }
             args += ["-map", "0:v:0?", "-map", "0:a:0?"]
@@ -159,6 +170,44 @@ enum CommandBuilder {
     private static func even(_ value: Int) -> Int {
         let clamped = min(max(value, 16), 7680)
         return clamped % 2 == 0 ? clamped : clamped - 1
+    }
+
+    // MARK: - 图片
+
+    private static func imageFilter(settings: ConversionSettings,
+                                    info: MediaInfo,
+                                    format: OutputFormat) -> String? {
+        var filters: [String] = []
+        if let base = videoFilter(settings: settings, info: info) {
+            filters.append(base)
+        }
+        if format.id == "ico", info.width > 256 || info.height > 256 {
+            filters.append("scale=256:256:force_original_aspect_ratio=decrease")
+        }
+        return filters.isEmpty ? nil : filters.joined(separator: ",")
+    }
+
+    private static func imageArguments(settings: ConversionSettings) -> [String] {
+        let q = settings.quality
+        switch settings.format.id {
+        case "jpg":
+            return ["-c:v", "mjpeg", "-q:v", "\(q.jpegQuality)", "-pix_fmt", "yuvj420p"]
+        case "png":
+            return ["-c:v", "png", "-compression_level", "\(q.pngLevel)", "-pix_fmt", "rgba"]
+        case "webp":
+            return ["-c:v", "libwebp", "-quality", "\(q.webpQuality)", "-method", "6", "-pix_fmt", "yuva420p"]
+        case "avif":
+            return ["-c:v", "libaom-av1", "-crf", "\(q.avifCRF)", "-b:v", "0",
+                    "-still-picture", "1", "-pix_fmt", "yuv420p"]
+        case "tiff":
+            return ["-c:v", "tiff", "-pix_fmt", "rgba", "-compression_algo", "deflate"]
+        case "bmp":
+            return ["-c:v", "bmp", "-pix_fmt", "bgra"]
+        case "ico":
+            return ["-c:v", "png", "-pix_fmt", "rgba"]
+        default:
+            return ["-c:v", "png", "-pix_fmt", "rgba"]
+        }
     }
 
     // MARK: - 音频

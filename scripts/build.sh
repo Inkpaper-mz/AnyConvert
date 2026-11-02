@@ -20,12 +20,12 @@ mkdir -p "$DIST" "$BUILD"
 
 echo "==> 编译 Swift（架构: ${ARCHS}）"
 if [ "$ARCHS" = "arm64 x86_64" ] || [ "$ARCHS" = "x86_64 arm64" ]; then
-    swift build -c release --arch arm64 --arch x86_64
-    BIN="$ROOT/.build/apple/Products/Release/AnyConvert"
+    ARCH_FLAGS=(--arch arm64 --arch x86_64)
 else
-    swift build -c release --arch "$ARCHS"
-    BIN="$(swift build -c release --arch "$ARCHS" --show-bin-path)/AnyConvert"
+    ARCH_FLAGS=(--arch "$ARCHS")
 fi
+swift build -c release "${ARCH_FLAGS[@]}"
+BIN="$(swift build -c release "${ARCH_FLAGS[@]}" --show-bin-path)/AnyConvert"
 [ -x "$BIN" ] || { echo "找不到编译产物: $BIN"; exit 1; }
 echo "    产物: $BIN"
 
@@ -33,6 +33,10 @@ echo "==> 组装 App Bundle"
 mkdir -p "$BUNDLE/Contents/MacOS" "$BUNDLE/Contents/Resources/bin"
 cp "$BIN" "$BUNDLE/Contents/MacOS/AnyConvert"
 cp "$ROOT/Resources/Info.plist" "$BUNDLE/Contents/Info.plist"
+cp "$ROOT/Resources/Strings.json" "$BUNDLE/Contents/Resources/"
+for lproj in "$ROOT"/Resources/*.lproj; do
+    [ -d "$lproj" ] && cp -R "$lproj" "$BUNDLE/Contents/Resources/"
+done
 printf 'APPL????' > "$BUNDLE/Contents/PkgInfo"
 
 echo "==> 生成图标"

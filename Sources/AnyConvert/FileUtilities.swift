@@ -12,6 +12,8 @@ enum FileUtilities {
         // 音频
         "mp3", "wav", "flac", "aac", "m4a", "m4b", "ogg", "oga", "opus", "wma", "aiff", "aif",
         "aifc", "ac3", "eac3", "dts", "caf", "amr", "au", "ape", "wv", "tta", "mka", "mp2", "mpa",
+        // 图片
+        "jpg", "jpeg", "png", "webp", "avif", "heic", "heif", "tif", "tiff", "bmp", "ico",
     ]
 
     static func isMediaFile(_ url: URL) -> Bool {

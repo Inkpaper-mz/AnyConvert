@@ -18,10 +18,10 @@ final class RootView: NSView, AppModelObserver {
     private let settingsScroll = NSScrollView()
     private let settingsPanel = SettingsPanel()
 
-    private let startButton = GradientButton(title: "开始转换", symbol: "bolt.fill", large: true)
-    private let cancelButton = PillButton(title: "取消")
-    private let clearButton = PillButton(title: "清空")
-    private let clearDoneButton = PillButton(title: "清理已完成")
+    private let startButton = GradientButton(title: L10n.t("btn.start"), symbol: "bolt.fill", large: true)
+    private let cancelButton = PillButton(title: L10n.t("btn.cancel"))
+    private let clearButton = PillButton(title: L10n.t("btn.clear"))
+    private let clearDoneButton = PillButton(title: L10n.t("btn.clearDone"))
     private let summaryLabel = Label.make("", size: 11, color: .secondaryLabelColor)
     private let ffmpegBadge = BadgeView(text: "检测中…", tone: .neutral)
     private let folderButton = NSButton()
@@ -67,9 +67,9 @@ final class RootView: NSView, AppModelObserver {
         icon.translatesAutoresizingMaskIntoConstraints = false
         icon.symbolName = "arrow.triangle.2.circlepath"
 
-        let title = Label.make("万能转码", size: 16, weight: .semibold)
+        let title = Label.make(L10n.t("app.title"), size: 16, weight: .semibold)
         title.setContentHuggingPriority(.required, for: .horizontal)
-        let subtitle = Label.make("视频 · 音频 · 动图 任意互转 · 全部由 FFmpeg 解码",
+        let subtitle = Label.make(L10n.t("app.tagline"),
                                   size: 11, color: .secondaryLabelColor)
         let titleStack = NSStackView(views: [title, subtitle])
         titleStack.orientation = .vertical
@@ -86,7 +86,7 @@ final class RootView: NSView, AppModelObserver {
         folderButton.bezelStyle = .regularSquare
         folderButton.target = self
         folderButton.action = #selector(openOutputFolder)
-        folderButton.toolTip = "打开输出文件夹"
+        folderButton.toolTip = L10n.t("menu.openOutput")
         folderButton.translatesAutoresizingMaskIntoConstraints = false
         folderButton.setContentHuggingPriority(.required, for: .horizontal)
 
@@ -359,7 +359,7 @@ final class RootView: NSView, AppModelObserver {
         clearDoneButton.isEnabled = model.doneCount > 0 && !model.isRunning
         cancelButton.isHidden = !model.isRunning
         startButton.isEnabled = model.canStart
-        startButton.title = model.isRunning ? "转换中…" : "开始转换"
+        startButton.title = model.isRunning ? L10n.t("btn.transcoding") : L10n.t("btn.start")
         folderButton.isEnabled = !model.jobs.isEmpty
     }
 
@@ -388,10 +388,10 @@ final class RootView: NSView, AppModelObserver {
 
     func modelDidProduceMessage(_ model: AppModel, message: String) {
         let alert = NSAlert()
-        alert.messageText = "提示"
+        alert.messageText = L10n.t("msg.title")
         alert.informativeText = message
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "知道了")
+        alert.addButton(withTitle: L10n.t("btn.ok"))
         if let window {
             alert.beginSheetModal(for: window, completionHandler: nil)
         } else {

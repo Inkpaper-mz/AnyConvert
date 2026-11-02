@@ -17,7 +17,7 @@ final class JobRowView: CardView {
     private let progressBar = ProgressBarView()
     private let percentLabel = Label.make("0%", size: 10, weight: .semibold, color: Theme.accent, mono: true)
     private let speedLabel = Label.make("", size: 10, color: .secondaryLabelColor, mono: true)
-    private let statusBadge = BadgeView(text: "等待", tone: .neutral)
+    private let statusBadge = BadgeView(text: L10n.t("status.waiting"), tone: .neutral)
     private let revealButton = NSButton()
 
     private var hovering = false
@@ -56,7 +56,7 @@ final class JobRowView: CardView {
         revealButton.bezelStyle = .regularSquare
         revealButton.target = self
         revealButton.action = #selector(handleReveal)
-        revealButton.toolTip = "在 Finder 中显示"
+        revealButton.toolTip = L10n.t("row.reveal")
         revealButton.translatesAutoresizingMaskIntoConstraints = true
         revealButton.isHidden = true
         addSubview(revealButton)
@@ -71,14 +71,14 @@ final class JobRowView: CardView {
 
     private func buildMenu() -> NSMenu {
         let menu = NSMenu()
-        let reveal = NSMenuItem(title: "在 Finder 中显示", action: #selector(handleReveal), keyEquivalent: "")
+        let reveal = NSMenuItem(title: L10n.t("row.reveal"), action: #selector(handleReveal), keyEquivalent: "")
         reveal.target = self
         menu.addItem(reveal)
-        let retry = NSMenuItem(title: "重新转换", action: #selector(handleRetry), keyEquivalent: "")
+        let retry = NSMenuItem(title: L10n.t("row.retry"), action: #selector(handleRetry), keyEquivalent: "")
         retry.target = self
         menu.addItem(retry)
         menu.addItem(NSMenuItem.separator())
-        let remove = NSMenuItem(title: "从列表移除", action: #selector(handleRemove), keyEquivalent: "")
+        let remove = NSMenuItem(title: L10n.t("row.remove"), action: #selector(handleRemove), keyEquivalent: "")
         remove.target = self
         menu.addItem(remove)
         return menu
@@ -156,11 +156,12 @@ final class JobRowView: CardView {
         extBadge.set(text: job.fileExtension, tone: .neutral)
         extBadge.isHidden = job.fileExtension.isEmpty
 
-        let isVideo = job.info?.hasVideo ?? true
-        iconTile.symbolName = isVideo ? "film" : "waveform"
-        iconTile.gradientColors = isVideo
-            ? [Theme.accent, Theme.accentDeep]
-            : [Theme.mint, Theme.teal]
+        let isImage = job.info?.isImage ?? false
+        let isVideo = (job.info?.hasVideo ?? true) && !isImage
+        iconTile.symbolName = isImage ? "photo" : (isVideo ? "film" : "waveform")
+        iconTile.gradientColors = isImage
+            ? [Theme.amber, Theme.pink]
+            : (isVideo ? [Theme.accent, Theme.accentDeep] : [Theme.mint, Theme.teal])
 
         metaLabel.stringValue = metaText(job)
         updateStatus(job)
@@ -172,32 +173,32 @@ final class JobRowView: CardView {
 
         switch job.status {
         case .waiting:
-            statusBadge.set(text: "等待", tone: .neutral)
+            statusBadge.set(text: L10n.t("status.waiting"), tone: .neutral)
             revealButton.isHidden = true
             show(progress: false, message: nil)
         case .probing:
-            statusBadge.set(text: "分析中", tone: .accent)
+            statusBadge.set(text: L10n.t("status.probing"), tone: .accent)
             revealButton.isHidden = true
-            metaLabel.stringValue = "正在读取媒体信息…"
+            metaLabel.stringValue = L10n.t("status.analyzing")
             show(progress: false, message: nil)
         case .running:
-            statusBadge.set(text: "转换中", tone: .accent)
+            statusBadge.set(text: L10n.t("status.running"), tone: .accent)
             revealButton.isHidden = true
             show(progress: true, message: nil)
             progressBar.progress = job.progress
             percentLabel.stringValue = "\(Int((job.progress * 100).rounded()))%"
             speedLabel.stringValue = job.speed
         case .done:
-            statusBadge.set(text: "完成", tone: .success)
+            statusBadge.set(text: L10n.t("status.done"), tone: .success)
             revealButton.isHidden = false
             metaLabel.stringValue = metaText(job)
             show(progress: false, message: job.message.isEmpty ? nil : job.message)
         case .failed:
-            statusBadge.set(text: "失败", tone: .danger)
+            statusBadge.set(text: L10n.t("status.failed"), tone: .danger)
             revealButton.isHidden = true
-            show(progress: false, message: job.message.isEmpty ? "转换失败" : job.message)
+            show(progress: false, message: job.message.isEmpty ? L10n.t("status.failed") : job.message)
         case .cancelled:
-            statusBadge.set(text: "已取消", tone: .warning)
+            statusBadge.set(text: L10n.t("status.cancelled"), tone: .warning)
             revealButton.isHidden = true
             show(progress: false, message: nil)
         }
@@ -225,11 +226,16 @@ final class JobRowView: CardView {
     private func metaText(_ job: Job) -> String {
         var parts: [String] = [job.fileSize]
         if let info = job.info {
-            parts.append(Job.timecode(info.duration))
-            if info.hasVideo, info.width > 0 {
-                parts.append(info.resolutionText)
-            } else if info.hasVideo == false, info.hasAudio {
-                parts.append("音频")
+            if info.isImage {
+                parts.append(L10n.t("status.image"))
+                if info.width > 0 { parts.append(info.resolutionText) }
+            } else {
+                parts.append(Job.timecode(info.duration))
+                if info.hasVideo, info.width > 0 {
+                    parts.append(info.resolutionText)
+                } else if info.hasVideo == false, info.hasAudio {
+                    parts.append(L10n.t("status.audio"))
+                }
             }
         }
         if job.status == .done, let out = job.outputURL {

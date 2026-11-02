@@ -10,6 +10,8 @@ enum Theme {
     static let ok = NSColor(srgbRed: 0.10, green: 0.66, blue: 0.42, alpha: 1)
     static let warn = NSColor(srgbRed: 0.93, green: 0.58, blue: 0.10, alpha: 1)
     static let bad = NSColor(srgbRed: 0.89, green: 0.26, blue: 0.28, alpha: 1)
+    static let amber = NSColor(srgbRed: 0.98, green: 0.62, blue: 0.20, alpha: 1)
+    static let pink = NSColor(srgbRed: 0.94, green: 0.36, blue: 0.58, alpha: 1)
 
     static var isDark: Bool {
         NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua

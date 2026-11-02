@@ -101,10 +101,10 @@ final class AppModel {
 
     var summaryText: String {
         if isRunning {
-            return "正在转换 \(jobs.filter { $0.status == .running }.count) 个 · 已完成 \(doneCount)/\(jobs.count)"
+            return L10n.t("footer.running", jobs.filter { $0.status == .running }.count, doneCount, jobs.count)
         }
-        if jobs.isEmpty { return "还没有文件" }
-        return "共 \(jobs.count) 个文件 · 已完成 \(doneCount) 个"
+        if jobs.isEmpty { return L10n.t("status.noFiles") }
+        return L10n.t("footer.summary", jobs.count, doneCount)
     }
 
     // MARK: - 设置
@@ -207,7 +207,7 @@ final class AppModel {
     func addFiles(_ urls: [URL]) {
         let expanded = FileUtilities.expand(urls: urls)
         guard !expanded.isEmpty else {
-            observer?.modelDidProduceMessage(self, message: "没有找到可用的音视频文件。")
+            observer?.modelDidProduceMessage(self, message: L10n.t("msg.noMedia"))
             return
         }
 
@@ -223,7 +223,7 @@ final class AppModel {
         }
 
         guard !added.isEmpty else {
-            observer?.modelDidProduceMessage(self, message: "这些文件已经在列表里了。")
+            observer?.modelDidProduceMessage(self, message: L10n.t("msg.duplicate"))
             return
         }
         observer?.modelJobsDidChange(self)
@@ -280,7 +280,7 @@ final class AppModel {
 
     func clearAll() {
         guard !isRunning else {
-            observer?.modelDidProduceMessage(self, message: "请先取消正在进行的转换。")
+            observer?.modelDidProduceMessage(self, message: L10n.t("msg.cancelFirst"))
             return
         }
         jobs.removeAll()
@@ -320,20 +320,20 @@ final class AppModel {
         }.map(\.id)
 
         guard !ids.isEmpty else {
-            observer?.modelDidProduceMessage(self, message: "列表里没有待转换的文件。")
+            observer?.modelDidProduceMessage(self, message: L10n.t("msg.noPending"))
             return
         }
 
         if outputMode == .custom {
             guard let dir = customDirectory else {
-                observer?.modelDidProduceMessage(self, message: "请先选择输出文件夹。")
+                observer?.modelDidProduceMessage(self, message: L10n.t("msg.chooseOutput"))
                 return
             }
             if !FileManager.default.fileExists(atPath: dir.path) {
                 do {
                     try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
                 } catch {
-                    observer?.modelDidProduceMessage(self, message: "无法创建输出文件夹：\(error.localizedDescription)")
+                    observer?.modelDidProduceMessage(self, message: L10n.t("msg.createDirFail", error.localizedDescription))
                     return
                 }
             }
@@ -402,6 +402,14 @@ final class AppModel {
             fail(id, message: ConvertError.noVideoTrack.localizedDescription)
             return
         }
+        if settings.format.kind == .image, !info.hasVideo {
+            fail(id, message: ConvertError.noVideoTrack.localizedDescription)
+            return
+        }
+        if settings.format.kind == .video, info.isImage, settings.format.id != "gif" {
+            fail(id, message: ConvertError.imageNeedsImageFormat.localizedDescription)
+            return
+        }
 
         let directory = outputDirectory(for: job.url)
         if !FileManager.default.fileExists(atPath: directory.path) {
@@ -457,7 +465,7 @@ final class AppModel {
                 Task { @MainActor in self?.updateProgress(jobID: job.id, percent: percent, speed: speed) }
             }
             if let index = jobs.firstIndex(where: { $0.id == job.id }) {
-                jobs[index].message = "硬件编码不可用，已自动改用软件编码"
+                jobs[index].message = L10n.t("msg.hwFallback")
                 observer?.modelJobDidUpdate(self, id: job.id)
             }
         }
