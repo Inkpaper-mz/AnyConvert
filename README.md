@@ -227,3 +227,8 @@ swift build -c release
 - 转码引擎：**FFmpeg**（GPL v3），静态构建来自 <https://ffmpeg.martin-riedl.de/>
   重新分发 App 时请遵守 GPL v3 的相应义务（提供源码获取方式与许可声明）。
 - 图标由 `scripts/make_icon.swift` 生成，随项目一同按 MIT 授权。
+
+## Contributors
+
+- [Inkpaper-mz](https://github.com/Inkpaper-mz) — author & maintainer
+- [DeepSeek](https://github.com/deepseek-ai) — AI pair programmer (architecture, implementation, debugging, docs)
