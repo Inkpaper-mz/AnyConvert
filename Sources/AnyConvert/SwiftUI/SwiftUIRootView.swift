@@ -191,6 +191,32 @@ struct SwiftUIRootView: View {
                 }
                 }
 
+                if model.currentFormat.kind == .video {
+                    section(L10n.t("settings.fps")) {
+                        Picker("", selection: bind({ model.fps }, { model.setFPS($0) })) {
+                            Text(L10n.t("fps.original")).tag(0)
+                            Text("60 fps").tag(60)
+                            Text("30 fps").tag(30)
+                            Text("24 fps").tag(24)
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                    }
+                }
+
+                section(L10n.t("settings.toolbox")) {
+                    Menu {
+                        Button(L10n.t("tool.mergePDF")) { Toolbox.mergePDFs() }
+                        Button(L10n.t("tool.splitPDF")) { Toolbox.splitPDF() }
+                        Button(L10n.t("tool.pdfImages")) { Toolbox.exportPDFImages() }
+                        Button(L10n.t("tool.imagesPDF")) { Toolbox.imagesToPDF() }
+                        Divider()
+                        Button(L10n.t("tool.zip")) { Toolbox.zipFiles() }
+                    } label: {
+                        SwiftUI.Label(L10n.t("tool.pdfzip"), systemImage: "wrench.and.screwdriver")
+                    }
+                }
+
                 section(L10n.t("settings.output")) {
                     Picker("", selection: bind({ model.outputMode }, { model.setOutputMode($0) })) {
                         Text(L10n.t("settings.alongside")).tag(OutputMode.alongside)
@@ -269,6 +295,13 @@ struct SwiftUIRootView: View {
             Spacer()
             Text("\(model.pendingCount) → \(model.doneCount)")
                 .font(.system(size: 11)).foregroundColor(.secondary)
+            Picker("", selection: bind({ model.maxConcurrent }, { model.setMaxConcurrent($0) })) {
+                ForEach([1, 2, 3, 4, 5, 6, 8], id: \.self) { value in
+                    Text("\(L10n.t("settings.parallel")) \(value)").tag(value)
+                }
+            }
+            .labelsHidden()
+            .frame(width: 96)
             Button(L10n.t("btn.clearDone")) { model.clearFinished() }
                 .disabled(model.doneCount == 0 && model.jobs.isEmpty)
             Button(L10n.t("btn.clear")) { model.clearAll() }

@@ -289,3 +289,74 @@ enum DocumentEngine {
         return ProcessResult(status: process.terminationStatus, error: text)
     }
 }
+
+
+extension DocumentEngine {
+    static func mergePDFs(_ urls: [URL], to output: URL) throws {
+        let document = PDFDocument()
+        for url in urls {
+            guard let part = PDFDocument(url: url) else { continue }
+            for index in 0..<part.pageCount {
+                if let page = part.page(at: index) { document.insert(page, at: document.pageCount) }
+            }
+        }
+        guard document.pageCount > 0 else { throw Failure.failed("没有可合并的页面") }
+        guard document.write(to: output) else { throw Failure.failed("PDF 写入失败") }
+    }
+
+    static func splitPDF(_ url: URL, to directory: URL, every: Int) throws -> URL {
+        guard let document = PDFDocument(url: url) else { throw Failure.failed("无法读取 PDF") }
+        let step = max(1, every)
+        var files: [URL] = []
+        var start = 0
+        while start < document.pageCount {
+            let part = PDFDocument()
+            let end = min(start + step, document.pageCount)
+            for index in start..<end {
+                if let page = document.page(at: index) { part.insert(page, at: part.pageCount) }
+            }
+            let name = "\(url.deletingPathExtension().lastPathComponent)-\(start + 1)-\(end).pdf"
+            let path = directory.appendingPathComponent(name)
+            guard part.write(to: path) else { throw Failure.failed("拆分写入失败") }
+            files.append(path)
+            start = end
+        }
+        if files.count == 1 { return files[0] }
+        let archive = directory.appendingPathComponent("\(url.deletingPathExtension().lastPathComponent)-split.zip")
+        try zipFiles(files, to: archive)
+        for file in files { try? FileManager.default.removeItem(at: file) }
+        return archive
+    }
+
+    static func exportImages(_ url: URL, to directory: URL, format: String) throws -> URL {
+        guard let document = PDFDocument(url: url) else { throw Failure.failed("无法读取 PDF") }
+        var files: [URL] = []
+        for index in 0..<document.pageCount {
+            guard let page = document.page(at: index), let image = render(page: page, scale: 2) else { continue }
+            let tiff = image.tiffRepresentation
+            let rep = tiff.flatMap { NSBitmapImageRep(data: $0) }
+            let isPNG = format.lowercased() == "png"
+            guard let data = rep?.representation(using: isPNG ? .png : .jpeg,
+                                                 properties: isPNG ? [:] : [.compressionFactor: 0.9]) else { continue }
+            let ext = isPNG ? "png" : "jpg"
+            let path = directory.appendingPathComponent("\(url.deletingPathExtension().lastPathComponent)-\(index + 1).\(ext)")
+            try data.write(to: path)
+            files.append(path)
+        }
+        guard !files.isEmpty else { throw Failure.failed("没有可导出的页面") }
+        let archive = directory.appendingPathComponent("\(url.deletingPathExtension().lastPathComponent)-images.zip")
+        try zipFiles(files, to: archive)
+        for file in files { try? FileManager.default.removeItem(at: file) }
+        return archive
+    }
+
+    static func zipFiles(_ urls: [URL], to output: URL) throws {
+        try? FileManager.default.removeItem(at: output)
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/zip")
+        process.arguments = ["-j", "-q", output.path] + urls.map(\.path)
+        try process.run()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else { throw Failure.failed("ZIP 打包失败") }
+    }
+}

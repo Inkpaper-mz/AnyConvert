@@ -38,6 +38,8 @@ final class AppModel {
     private(set) var extraArguments: [String] = []
     private(set) var targetSizeMB: Double?
     private(set) var allowDownscale = true
+    private(set) var fps: Int = 0
+    private(set) var maxConcurrent: Int = 3
     private(set) var docInstalling = false
     private(set) var docInstallProgress = 0.0
     private(set) var docInstallMessage = ""
@@ -92,6 +94,8 @@ final class AppModel {
         static let customWidth = "ac.customWidth"
         static let customHeight = "ac.customHeight"
         static let targetSizeMB = "ac.targetSizeMB"
+        static let fps = "ac.fps"
+        static let maxConcurrent = "ac.maxConcurrent"
         static let allowDownscale = "ac.allowDownscale"
     }
 
@@ -126,6 +130,9 @@ final class AppModel {
         let storedHeight = defaults.integer(forKey: Keys.customHeight)
         customWidth = storedWidth > 0 ? storedWidth : nil
         customHeight = storedHeight > 0 ? storedHeight : nil
+        fps = defaults.integer(forKey: Keys.fps)
+        let storedConcurrent = defaults.integer(forKey: Keys.maxConcurrent)
+        maxConcurrent = storedConcurrent > 0 ? min(8, max(1, storedConcurrent)) : 3
         let storedTarget = defaults.double(forKey: Keys.targetSizeMB)
         targetSizeMB = storedTarget > 0 ? storedTarget : nil
         if defaults.object(forKey: Keys.allowDownscale) != nil {
@@ -301,6 +308,21 @@ final class AppModel {
         guard targetSizeMB != normalized else { return }
         targetSizeMB = normalized
         defaults.set(normalized ?? 0, forKey: Keys.targetSizeMB)
+        observer?.modelSettingsDidChange(self)
+    }
+
+    func setFPS(_ value: Int) {
+        guard fps != value else { return }
+        fps = max(0, value)
+        defaults.set(fps, forKey: Keys.fps)
+        observer?.modelSettingsDidChange(self)
+    }
+
+    func setMaxConcurrent(_ value: Int) {
+        let clamped = min(8, max(1, value))
+        guard maxConcurrent != clamped else { return }
+        maxConcurrent = clamped
+        defaults.set(clamped, forKey: Keys.maxConcurrent)
         observer?.modelSettingsDidChange(self)
     }
 
@@ -528,15 +550,25 @@ final class AppModel {
         }
 
         isRunning = true
+        engine.resetCancellation()
         let settings = makeSettings()
+        let limit = maxConcurrent
         observer?.modelJobsDidChange(self)
 
         runTask = Task { [weak self] in
             guard let self else { return }
-            for id in ids {
-                if Task.isCancelled { break }
-                if self.jobs.first(where: { $0.id == id }) == nil { continue }
-                await self.convert(id: id, settings: settings)
+            await withTaskGroup(of: Void.self) { group in
+                var iterator = ids.makeIterator()
+                var running = 0
+                while running < limit, let id = iterator.next() {
+                    group.addTask { await self.convert(id: id, settings: settings) }
+                    running += 1
+                }
+                for await _ in group {
+                    if Task.isCancelled { break }
+                    guard let id = iterator.next() else { continue }
+                    group.addTask { await self.convert(id: id, settings: settings) }
+                }
             }
             self.isRunning = false
             self.observer?.modelQueueDidFinish(self)
@@ -561,7 +593,8 @@ final class AppModel {
             extraArguments: extraArguments,
             targetBytes: (currentFormat.kind == .image || currentFormat.kind == .video)
                 ? targetSizeMB.map { Int64($0 * 1024 * 1024) } : nil,
-            allowDownscale: allowDownscale
+            allowDownscale: allowDownscale,
+            fps: fps
         )
     }
 

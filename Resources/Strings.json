@@ -190,7 +190,17 @@
     "fmt.pptx.sub": "PowerPoint 演示",
     "group.document": "文档",
     "msg.docEngine": "文档转换需要 LibreOffice：请安装 LibreOffice.app，或用 SOFFICE 指定路径。",
-    "msg.docUnsupported": "不支持将 .%@ 转换为 .%@，请检查文件类型。"
+    "msg.docUnsupported": "不支持将 .%@ 转换为 .%@，请检查文件类型。",
+    "settings.fps": "帧率",
+    "fps.original": "保持原始",
+    "settings.parallel": "并行",
+    "settings.toolbox": "工具箱",
+    "tool.pdfzip": "PDF / ZIP 工具",
+    "tool.mergePDF": "合并 PDF…",
+    "tool.splitPDF": "拆分 PDF…",
+    "tool.pdfImages": "PDF 转图片…",
+    "tool.imagesPDF": "图片转 PDF…",
+    "tool.zip": "打包 ZIP…"
   },
   "zh-Hant": {
     "app.title": "萬能轉碼",
@@ -383,7 +393,17 @@
     "fmt.pptx.sub": "PowerPoint 簡報",
     "group.document": "文件",
     "msg.docEngine": "文件轉換需要 LibreOffice：請安裝 LibreOffice.app，或用 SOFFICE 指定路徑。",
-    "msg.docUnsupported": "不支援將 .%@ 轉換為 .%@，請檢查檔案類型。"
+    "msg.docUnsupported": "不支援將 .%@ 轉換為 .%@，請檢查檔案類型。",
+    "settings.fps": "幀率",
+    "fps.original": "保持原始",
+    "settings.parallel": "並行",
+    "settings.toolbox": "工具箱",
+    "tool.pdfzip": "PDF / ZIP 工具",
+    "tool.mergePDF": "合併 PDF…",
+    "tool.splitPDF": "拆分 PDF…",
+    "tool.pdfImages": "PDF 轉圖片…",
+    "tool.imagesPDF": "圖片轉 PDF…",
+    "tool.zip": "打包 ZIP…"
   },
   "en": {
     "app.title": "AnyConvert",
@@ -576,7 +596,17 @@
     "fmt.pptx.sub": "Presentation",
     "group.document": "Documents",
     "msg.docEngine": "Document conversion needs LibreOffice. Install LibreOffice.app or set SOFFICE.",
-    "msg.docUnsupported": "Cannot convert .%@ to .%@. Check the file type."
+    "msg.docUnsupported": "Cannot convert .%@ to .%@. Check the file type.",
+    "settings.fps": "Frame rate",
+    "fps.original": "Original",
+    "settings.parallel": "Parallel",
+    "settings.toolbox": "Toolbox",
+    "tool.pdfzip": "PDF / ZIP tools",
+    "tool.mergePDF": "Merge PDFs…",
+    "tool.splitPDF": "Split PDF…",
+    "tool.pdfImages": "PDF to images…",
+    "tool.imagesPDF": "Images to PDF…",
+    "tool.zip": "Create ZIP…"
   },
   "ja": {
     "app.title": "万能変換",
@@ -769,7 +799,17 @@
     "fmt.pptx.sub": "プレゼン",
     "group.document": "文書",
     "msg.docEngine": "文書変換には LibreOffice が必要です。",
-    "msg.docUnsupported": ".%@ から .%@ へは変換できません。"
+    "msg.docUnsupported": ".%@ から .%@ へは変換できません。",
+    "settings.fps": "フレームレート",
+    "fps.original": "元のまま",
+    "settings.parallel": "並列",
+    "settings.toolbox": "ツール",
+    "tool.pdfzip": "PDF / ZIP ツール",
+    "tool.mergePDF": "PDF を結合…",
+    "tool.splitPDF": "PDF を分割…",
+    "tool.pdfImages": "PDF を画像に…",
+    "tool.imagesPDF": "画像を PDF に…",
+    "tool.zip": "ZIP を作成…"
   },
   "ko": {
     "app.title": "만능 변환",
@@ -962,7 +1002,17 @@
     "fmt.pptx.sub": "프레젠테이션",
     "group.document": "문서",
     "msg.docEngine": "문서 변환에는 LibreOffice가 필요합니다.",
-    "msg.docUnsupported": ".%@ → .%@ 변환은 지원되지 않습니다."
+    "msg.docUnsupported": ".%@ → .%@ 변환은 지원되지 않습니다.",
+    "settings.fps": "프레임률",
+    "fps.original": "원본 유지",
+    "settings.parallel": "병렬",
+    "settings.toolbox": "도구",
+    "tool.pdfzip": "PDF / ZIP 도구",
+    "tool.mergePDF": "PDF 합치기…",
+    "tool.splitPDF": "PDF 나누기…",
+    "tool.pdfImages": "PDF → 이미지…",
+    "tool.imagesPDF": "이미지 → PDF…",
+    "tool.zip": "ZIP 만들기…"
   },
   "fr": {
     "app.title": "AnyConvert",
@@ -1155,6 +1205,16 @@
     "fmt.pptx.sub": "Présentation",
     "group.document": "Documents",
     "msg.docEngine": "La conversion de documents nécessite LibreOffice.",
-    "msg.docUnsupported": "Conversion .%@ → .%@ impossible."
+    "msg.docUnsupported": "Conversion .%@ → .%@ impossible.",
+    "settings.fps": "Fréquence",
+    "fps.original": "Original",
+    "settings.parallel": "Parallèle",
+    "settings.toolbox": "Outils",
+    "tool.pdfzip": "Outils PDF / ZIP",
+    "tool.mergePDF": "Fusionner des PDF…",
+    "tool.splitPDF": "Diviser un PDF…",
+    "tool.pdfImages": "PDF vers images…",
+    "tool.imagesPDF": "Images vers PDF…",
+    "tool.zip": "Créer un ZIP…"
   }
 }

@@ -209,7 +209,8 @@ enum CompressionEngine {
         for attempt in 0..<3 {
             try await twoPass(input: input, output: output, videoKbps: currentKbps,
                               audioKbps: audioKbps, height: targetHeight,
-                              passLog: passLog, duration: info.duration, progress: progress)
+                              passLog: passLog, duration: info.duration, fps: settings.fps,
+                              progress: progress)
             lastSize = fileSize(output)
             if lastSize <= Int64(Double(target) * 1.02) { return }
             if attempt == 2 { break }
@@ -224,12 +225,15 @@ enum CompressionEngine {
     }
 
     private static func twoPass(input: URL, output: URL, videoKbps: Int, audioKbps: Int,
-                                height: Int?, passLog: URL, duration: Double,
+                                height: Int?, passLog: URL, duration: Double, fps: Int = 0,
                                 progress: @escaping (Double, String) -> Void) async throws {
         var base = ["-hide_banner", "-nostdin", "-y", "-i", input.path,
                     "-map", "0:v:0", "-map", "0:a:0?", "-sn", "-dn"]
         if let height {
             base += ["-vf", "scale=-2:\(height):flags=lanczos"]
+        }
+        if fps > 0 {
+            base += ["-r", "\(fps)"]
         }
         base += ["-c:v", "libx264", "-preset", "medium", "-b:v", "\(videoKbps)k",
                  "-maxrate", "\(Int(Double(videoKbps) * 1.2))k",

@@ -1,5 +1,5 @@
 #define MyAppName "万能转码 AnyConvert"
-#define MyAppVersion "1.5.1"
+#define MyAppVersion "1.5.2"
 #define MyAppPublisher "Inkpaper-mz"
 #define MyAppExeName "AnyConvert.exe"
 
@@ -12,7 +12,7 @@ DefaultDirName={autopf}\AnyConvert
 DefaultGroupName=万能转码
 DisableProgramGroupPage=yes
 OutputDir=Z:\Users\inkpaper\Documents\deepseek-harness\default-workspace\AnyConvert\dist
-OutputBaseFilename=AnyConvert-1.5.1-Windows-x64-Setup
+OutputBaseFilename=AnyConvert-1.5.2-Windows-x64-Setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern

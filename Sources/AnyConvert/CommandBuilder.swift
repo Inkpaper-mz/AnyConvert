@@ -38,6 +38,7 @@ enum CommandBuilder {
         if fmt.kind == .video {
             guard info.hasVideo else { return args }
             args += ["-map", "0:v:0?", "-map", "0:a:0?"]
+            if settings.fps > 0 { args += ["-r", "\(settings.fps)"] }
             args += videoArguments(settings: settings, info: info)
         } else {
             guard info.hasAudio else { return args }

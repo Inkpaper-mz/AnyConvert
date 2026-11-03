@@ -274,6 +274,7 @@ struct ConversionSettings {
     var extraArguments: [String] = []
     var targetBytes: Int64? = nil
     var allowDownscale: Bool = true
+    var fps: Int = 0
 }
 
 enum ConvertError: LocalizedError {

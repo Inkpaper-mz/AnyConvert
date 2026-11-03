@@ -35,30 +35,32 @@ final class Engine {
     static let shared = Engine()
 
     private let stateLock = NSLock()
-    private var currentProcess: Process?
+    private var processes: [Process] = []
     private var cancelledByUser = false
 
     var isRunning: Bool {
         stateLock.lock(); defer { stateLock.unlock() }
-        return currentProcess?.isRunning ?? false
+        return processes.contains { $0.isRunning }
     }
 
     func cancel() {
         stateLock.lock()
         cancelledByUser = true
-        let process = currentProcess
+        let list = processes
         stateLock.unlock()
-        process?.terminate()
+        for process in list { process.terminate() }
+    }
+
+    func resetCancellation() {
+        stateLock.lock()
+        cancelledByUser = false
+        stateLock.unlock()
     }
 
     func run(arguments: [String],
              duration: Double,
              progress: @escaping (Double, String) -> Void) async throws {
         guard let ffmpeg = Toolchain.ffmpeg else { throw ConvertError.toolchainMissing }
-
-        stateLock.lock()
-        cancelledByUser = false
-        stateLock.unlock()
 
         let process = Process()
         process.executableURL = ffmpeg
@@ -126,7 +128,7 @@ final class Engine {
         }
 
         stateLock.lock()
-        currentProcess = process
+        processes.append(process)
         stateLock.unlock()
 
         let gate = ResumeGate()
@@ -151,9 +153,8 @@ final class Engine {
         _ = errPipe.fileHandleForReading.availableData
 
         stateLock.lock()
-        cancelledByUser = cancelledByUser || false
+        processes.removeAll { $0 === process }
         let wasCancelled = cancelledByUser
-        currentProcess = nil
         stateLock.unlock()
 
         if wasCancelled { throw ConvertError.cancelled }
