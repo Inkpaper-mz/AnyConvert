@@ -209,6 +209,7 @@ struct SwiftUIRootView: View {
                         Button(L10n.t("tool.mergePDF")) { Toolbox.mergePDFs() }
                         Button(L10n.t("tool.splitPDF")) { Toolbox.splitPDF() }
                         Button(L10n.t("tool.pdfImages")) { Toolbox.exportPDFImages() }
+                        Button(L10n.t("tool.pdfTables")) { Toolbox.pdfTablesToExcel() }
                         Button(L10n.t("tool.imagesPDF")) { Toolbox.imagesToPDF() }
                         Divider()
                         Button(L10n.t("tool.zip")) { Toolbox.zipFiles() }

@@ -200,7 +200,8 @@
     "tool.splitPDF": "拆分 PDF…",
     "tool.pdfImages": "PDF 转图片…",
     "tool.imagesPDF": "图片转 PDF…",
-    "tool.zip": "打包 ZIP…"
+    "tool.zip": "打包 ZIP…",
+    "tool.pdfTables": "PDF 表格转 Excel…"
   },
   "zh-Hant": {
     "app.title": "萬能轉碼",
@@ -403,7 +404,8 @@
     "tool.splitPDF": "拆分 PDF…",
     "tool.pdfImages": "PDF 轉圖片…",
     "tool.imagesPDF": "圖片轉 PDF…",
-    "tool.zip": "打包 ZIP…"
+    "tool.zip": "打包 ZIP…",
+    "tool.pdfTables": "PDF 表格轉 Excel…"
   },
   "en": {
     "app.title": "AnyConvert",
@@ -606,7 +608,8 @@
     "tool.splitPDF": "Split PDF…",
     "tool.pdfImages": "PDF to images…",
     "tool.imagesPDF": "Images to PDF…",
-    "tool.zip": "Create ZIP…"
+    "tool.zip": "Create ZIP…",
+    "tool.pdfTables": "PDF tables to Excel…"
   },
   "ja": {
     "app.title": "万能変換",
@@ -809,7 +812,8 @@
     "tool.splitPDF": "PDF を分割…",
     "tool.pdfImages": "PDF を画像に…",
     "tool.imagesPDF": "画像を PDF に…",
-    "tool.zip": "ZIP を作成…"
+    "tool.zip": "ZIP を作成…",
+    "tool.pdfTables": "PDF 表を Excel に…"
   },
   "ko": {
     "app.title": "만능 변환",
@@ -1012,7 +1016,8 @@
     "tool.splitPDF": "PDF 나누기…",
     "tool.pdfImages": "PDF → 이미지…",
     "tool.imagesPDF": "이미지 → PDF…",
-    "tool.zip": "ZIP 만들기…"
+    "tool.zip": "ZIP 만들기…",
+    "tool.pdfTables": "PDF 표 → Excel…"
   },
   "fr": {
     "app.title": "AnyConvert",
@@ -1215,6 +1220,7 @@
     "tool.splitPDF": "Diviser un PDF…",
     "tool.pdfImages": "PDF vers images…",
     "tool.imagesPDF": "Images vers PDF…",
-    "tool.zip": "Créer un ZIP…"
+    "tool.zip": "Créer un ZIP…",
+    "tool.pdfTables": "Tableaux PDF vers Excel…"
   }
 }

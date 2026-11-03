@@ -24,6 +24,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         L10n.bootstrap()
         AppModel.shared.bootstrap()
+
+        // 调试：--tables <in.pdf> <out.xlsx>
+        let args = CommandLine.arguments
+        if let index = args.firstIndex(of: "--tables"), index + 2 < args.count {
+            do {
+                try PDFTableExtractor.export(from: URL(fileURLWithPath: args[index + 1]),
+                                             to: URL(fileURLWithPath: args[index + 2]))
+                FileHandle.standardOutput.write(Data("ok\n".utf8))
+                exit(0)
+            } catch {
+                FileHandle.standardError.write(Data("\(error.localizedDescription)\n".utf8))
+                exit(1)
+            }
+        }
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()
     }

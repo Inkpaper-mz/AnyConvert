@@ -46,6 +46,19 @@ enum Toolbox {
         } catch { fail(error) }
     }
 
+    static func pdfTablesToExcel() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.pdf]
+        guard panel.runModal() == .OK, let input = panel.url else { return }
+        let save = NSSavePanel()
+        save.nameFieldStringValue = "tables.xlsx"
+        guard save.runModal() == .OK, let output = save.url else { return }
+        do {
+            try PDFTableExtractor.export(from: input, to: output)
+            done("已提取表格", output)
+        } catch { fail(error) }
+    }
+
     static func imagesToPDF() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.image]
