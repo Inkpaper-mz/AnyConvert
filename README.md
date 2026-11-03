@@ -1,4 +1,4 @@
-# 万能转码 · AnyConvert 1.5.2
+# 万能转码 · AnyConvert 1.5.3
 
 全平台离线格式转换器：**三平台统一本地 Web UI**（macOS 另提供原生版）。
 43 种目标格式（文档 / 图片 / 音频 / 视频），支持按目标体积压缩；
@@ -96,35 +96,35 @@ PDF 合并/拆分/转图片/表格转 Excel/图片转 PDF/ZIP 打包、引擎状
 - 视频 → 图片：**截取第一帧**（例如 MP4 → JPG 生成封面图）。
 - 图片 → 视频：出于格式语义，仅允许输出 GIF（单帧动图）；其他视频格式会提示「图片只能转换为图片格式或 GIF」。
 
-## 下载（v1.5.2）
+## 下载（v1.5.3）
 
 | 平台 | 文件 | 说明 |
 | --- | --- | --- |
-| macOS（推荐，Web UI） | [AnyConvert-1.5.2-macOS-web.zip](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.2/AnyConvert-1.5.2-macOS-web.zip) | 解压双击 .app，首次运行安装脚本 |
-| Windows | [AnyConvert-1.5.2-Windows-x64-Setup.exe](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.2/AnyConvert-1.5.2-Windows-x64-Setup.exe) | **exe 安装包**，内置 Python/FFmpeg；首次运行可一键下载 LibreOffice |
-| Linux | [AnyConvert-1.5.2-Linux-x64.tar.gz](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.2/AnyConvert-1.5.2-Linux-x64.tar.gz) | Python 3.10+，`bash install.sh` |
-| macOS 原生版（可选） | [AnyConvert-1.5.2-macOS-universal.dmg](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.2/AnyConvert-1.5.2-macOS-universal.dmg) | SwiftUI 原生界面；首次运行可一键下载 LibreOffice（清华镜像） |
+| macOS（推荐，Web UI） | [AnyConvert-1.5.3-macOS-web.zip](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.3/AnyConvert-1.5.3-macOS-web.zip) | 解压双击 .app，首次运行安装脚本 |
+| Windows | [AnyConvert-1.5.3-Windows-x64-Setup.exe](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.3/AnyConvert-1.5.3-Windows-x64-Setup.exe) | **exe 安装包**，内置 Python/FFmpeg；首次运行可一键下载 LibreOffice |
+| Linux | [AnyConvert-1.5.3-Linux-x64.tar.gz](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.3/AnyConvert-1.5.3-Linux-x64.tar.gz) | Python 3.10+，`bash install.sh` |
+| macOS 原生版（可选） | [AnyConvert-1.5.3-macOS-universal.dmg](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.3/AnyConvert-1.5.3-macOS-universal.dmg) | SwiftUI 原生界面；首次运行可一键下载 LibreOffice（清华镜像） |
 
-发布页：<https://github.com/Inkpaper-mz/AnyConvert/releases/tag/v1.5.2>
+发布页：<https://github.com/Inkpaper-mz/AnyConvert/releases/tag/v1.5.3>
 
 ## 安装
 
 ### macOS（Web UI，推荐）
 
-1. 解压 `AnyConvert-1.5.2-macOS-web.zip`；
+1. 解压 `AnyConvert-1.5.3-macOS-web.zip`；
 2. 双击包内 **安装依赖.command**（首次，安装 PyMuPDF 并下载 LibreOffice）；
 3. 双击 **万能转码.app**，浏览器自动打开本地界面；
 4. 首次被系统拦截时：右键 .app → 打开。
 
 ### Windows
 
-1. 双击 `AnyConvert-1.5.2-Windows-x64-Setup.exe`，按向导安装；
+1. 双击 `AnyConvert-1.5.3-Windows-x64-Setup.exe`，按向导安装；
 2. 从开始菜单 / 桌面启动「万能转码」；
 3. 文档转换需另装 LibreOffice；PDF / 图片 / 音视频开箱即用。
 
 ### Linux
 
-1. 解压 `AnyConvert-1.5.2-Linux-x64.tar.gz`；
+1. 解压 `AnyConvert-1.5.3-Linux-x64.tar.gz`；
 2. 安装 Python 3.10+，执行 `bash install.sh`；
 3. `bash 启动-Linux.sh` 启动。
 

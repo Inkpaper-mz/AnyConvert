@@ -12,7 +12,7 @@ import tempfile
 import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSION = "1.5.2"
+VERSION = "1.5.3"
 DIST = os.path.join(ROOT, "dist")
 PREFIX = f"AnyConvert-{VERSION}"
 
