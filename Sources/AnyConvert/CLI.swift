@@ -14,6 +14,7 @@ enum CLI {
         var width: Int?
         var height: Int?
         var hardware = false
+        var videoCodec: VideoCodec = .auto
         var json = false
         var showCapabilities = false
         var targetsFor: String?
@@ -59,6 +60,11 @@ enum CLI {
             case "--width": width = next().flatMap(Int.init)
             case "--height": height = next().flatMap(Int.init)
             case "--hw", "--hardware": hardware = true
+            case "--codec":
+                guard let raw = next(), let value = VideoCodec(rawValue: raw) else {
+                    return fail("codec must be auto, h264, h265 or av1", code: "E_ARGS", json: json)
+                }
+                videoCodec = value
             case "--json": json = true
             case "--quiet": quiet = true
             case "--preset": _ = next()
@@ -93,22 +99,64 @@ enum CLI {
         guard FileManager.default.fileExists(atPath: source.path) else {
             return fail("input not found: \(source.path)", code: "E_NO_INPUT", json: json)
         }
+        guard let format = Catalog.all.first(where: { $0.id == target }) else {
+            return fail("unknown target: \(target)", code: "E_TARGET", json: json)
+        }
+        let sourceExt = source.pathExtension.lowercased()
+        if format.kind == .document || DocumentEngine.isDocument(sourceExt) {
+            guard DocumentEngine.canConvert(target: format.ext, sourceExt: sourceExt) else {
+                return fail("unsupported conversion: \(sourceExt) → \(format.ext)", code: "E_TARGET", json: json)
+            }
+            guard targetSizeMB == nil else {
+                return fail("target-size only supports image/video", code: "E_TARGET_KIND", json: json)
+            }
+            let directory = outputDir.map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
+                ?? source.deletingLastPathComponent()
+            do { try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true) }
+            catch { return fail(error.localizedDescription, code: "E_OUTPUT", json: json) }
+            let output = FileUtilities.outputURL(for: source, ext: format.ext, directory: directory)
+            let started = Date()
+            let semaphore = DispatchSemaphore(value: 0)
+            var failure: Error?
+            Task.detached {
+                do { try await DocumentEngine.convert(src: source, target: format, output: output, progress: { _ in }) }
+                catch { failure = error }
+                semaphore.signal()
+            }
+            semaphore.wait()
+            if let failure {
+                try? FileManager.default.removeItem(at: output)
+                return fail(failure.localizedDescription, code: "E_CONVERT", json: json)
+            }
+            let size = (try? FileManager.default.attributesOfItem(atPath: output.path)[.size] as? NSNumber)??.int64Value ?? 0
+            guard size > 0 else { return fail("empty output", code: "E_EMPTY", json: json) }
+            if json {
+                printJSON(["ok": true, "input": source.path, "output": output.path,
+                           "format": format.id, "bytes": size,
+                           "elapsedMs": Int(Date().timeIntervalSince(started) * 1000),
+                           "engine": "DocumentEngine", "preset": presetID ?? ""])
+            } else { print(output.path) }
+            return 0
+        }
         guard let ffmpeg = Toolchain.ffmpeg, Toolchain.ffprobe != nil else {
             return fail("ffmpeg not found", code: "E_NO_ENGINE", json: json)
         }
 
+        var mediaSource = source
+        if ProfessionalImage.needsRasterization(source) {
+            do { mediaSource = try ProfessionalImage.rasterize(source) }
+            catch { return fail(error.localizedDescription, code: "E_PROBE", json: json) }
+        }
+        defer { if mediaSource != source { ProfessionalImage.cleanup(mediaSource) } }
         let info: MediaInfo
         do {
-            info = try MediaProbe.probeSync(source)
+            info = try MediaProbe.probeSync(mediaSource)
         } catch {
             return fail(error.localizedDescription, code: "E_PROBE", json: json)
         }
 
         if info.width > 0, info.height > 0, info.width * info.height > 100_000_000 {
             return fail("image is too large (over 100 megapixels)", code: "E_TOO_LARGE", json: json)
-        }
-        guard let format = Catalog.all.first(where: { $0.id == target }) else {
-            return fail("unknown target: \(target)", code: "E_TARGET", json: json)
         }
         if format.kind == .audio, !info.hasAudio {
             return fail("no audio track", code: "E_NO_AUDIO", json: json)
@@ -119,7 +167,7 @@ enum CLI {
         if format.kind == .image, !info.hasVideo {
             return fail("no video/image track", code: "E_NO_IMAGE", json: json)
         }
-        if format.kind == .video, info.isImage, format.id != "gif" {
+        if format.kind == .video, info.isImage, !["gif", "mp4", "webm"].contains(format.id) {
             return fail("image input can only target image or GIF", code: "E_IMAGE_ONLY", json: json)
         }
 
@@ -131,13 +179,19 @@ enum CLI {
         if let targetSizeMB, targetSizeMB > 0, format.kind != .image, format.kind != .video {
             return fail("target-size only supports image/video", code: "E_TARGET_KIND", json: json)
         }
+        if videoCodec != .auto && !["mp4", "mkv"].contains(format.id) {
+            return fail("codec selection supports mp4 and mkv", code: "E_TARGET_KIND", json: json)
+        }
+        if targetSizeMB != nil && (videoCodec == .h265 || videoCodec == .av1) {
+            return fail("target-size supports h264 only", code: "E_TARGET_KIND", json: json)
+        }
         let settings = ConversionSettings(format: format, quality: quality, resolution: resolution,
                                           audioBitrate: bitrate, hardware: hardware,
                                           customWidth: width, customHeight: height,
                                           targetBytes: targetSizeMB.map { Int64($0 * 1024 * 1024) },
-                                          allowDownscale: allowDownscale)
+                                          allowDownscale: allowDownscale, videoCodec: videoCodec)
         guard let engine = EngineRegistry.engine(for: format),
-              let args = engine.arguments(for: settings, input: source, output: output, info: info) else {
+              let args = engine.arguments(for: settings, input: mediaSource, output: output, info: info) else {
             return fail("no engine for \(format.id)", code: "E_NO_ENGINE", json: json)
         }
 
@@ -150,7 +204,7 @@ enum CLI {
         Task {
             do {
                 if settings.targetBytes != nil {
-                    try await CompressionEngine.compress(input: source, settings: settings,
+                    try await CompressionEngine.compress(input: mediaSource, settings: settings,
                                                          output: output, info: info) { percent, _ in
                         guard !json, !quiet else { return }
                         let value = Int(percent * 100)
@@ -228,6 +282,7 @@ enum CLI {
           --preset <id>             使用预设（可用 --capabilities 查看）
           --target-size <MB>        压缩到不超过该体积（图片/视频）
           --no-downscale            禁止为达标而降低分辨率
+          --codec <auto|h264|h265|av1> MP4/MKV 视频编码
           --hw                      Apple VideoToolbox 硬件编码
           --json                    JSON 输出（成功 stdout / 失败 stderr）
           --quiet                   不打印进度
@@ -254,38 +309,37 @@ enum CLI {
     private static func printTargets(for value: String, json: Bool) -> Int32 {
         let path = (value as NSString).expandingTildeInPath
         let fm = FileManager.default
-        let info: MediaInfo
-        let ext: String
-        if fm.fileExists(atPath: path) {
+        let isFile = fm.fileExists(atPath: path)
+        let ext = isFile ? (path as NSString).pathExtension.lowercased()
+            : value.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "."))
+        var info = MediaInfo()
+        if isFile && !DocumentEngine.isDocument(ext) {
             do { info = try MediaProbe.probeSync(URL(fileURLWithPath: path)) }
             catch { return fail(error.localizedDescription, code: "E_PROBE", json: json) }
-            ext = (path as NSString).pathExtension.lowercased()
-        } else {
-            ext = value.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "."))
-            info = MediaInfo()
         }
 
-        var targets: [OutputFormat]
-        if info.hasAudio || info.hasVideo || info.isImage {
-            targets = Catalog.all.filter { format in
+        let imageExtensions: Set<String> = Set(["png", "jpg", "jpeg", "webp", "avif", "tiff", "tif", "bmp", "ico", "heic", "heif", "psd", "exr", "svg"]).union(ProfessionalImage.rawExtensions)
+        let audioExtensions: Set<String> = ["mp3", "wav", "flac", "aac", "m4a", "ogg", "opus", "wma", "aiff", "aif", "ac3", "caf"]
+        let videoExtensions: Set<String> = ["mp4", "mov", "m4v", "mkv", "webm", "avi", "wmv", "flv", "ts", "mpg", "mpeg", "3gp", "ogv", "gif"]
+        let targets = Catalog.all.filter { format in
+            if DocumentEngine.isDocument(ext) {
+                return DocumentEngine.canConvert(target: format.ext, sourceExt: ext)
+            }
+            if format.kind == .document {
+                return DocumentEngine.canConvert(target: format.ext, sourceExt: ext)
+            }
+            if isFile {
                 switch format.kind {
                 case .audio: return info.hasAudio
-                case .video: return info.hasVideo && (!info.isImage || format.id == "gif")
+                case .video: return info.hasVideo && (!info.isImage || ["gif", "mp4", "webm"].contains(format.id))
                 case .image: return info.hasVideo
                 case .document: return false
                 }
             }
-        } else {
-            targets = Catalog.all.filter { format in
-                switch ext {
-                case "png", "jpg", "jpeg", "webp", "avif", "tiff", "tif", "bmp", "ico", "heic":
-                    return format.kind == .image || format.id == "gif"
-                case "mp3", "wav", "flac", "aac", "m4a", "ogg", "opus", "wma", "aiff", "aif", "ac3", "caf":
-                    return format.kind == .audio
-                default:
-                    return true
-                }
-            }
+            if imageExtensions.contains(ext) { return format.kind == .image || ["gif", "mp4", "webm"].contains(format.id) }
+            if audioExtensions.contains(ext) { return format.kind == .audio }
+            if videoExtensions.contains(ext) { return format.kind != .document }
+            return false
         }
         let payload: [String: Any] = [
             "ok": true,

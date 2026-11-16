@@ -3,7 +3,7 @@ import Foundation
 
 /// 目录扫描 + 文件名/输出路径工具。
 enum FileUtilities {
-    /// 可识别的媒体扩展名（用于展开文件夹；拖拽则不做限制）
+    /// 可识别的媒体扩展名；文档扩展名统一从文档引擎读取。
     static let mediaExtensions: Set<String> = [
         // 视频
         "mp4", "m4v", "mov", "mkv", "webm", "avi", "wmv", "flv", "f4v", "ts", "m2ts", "mts",
@@ -13,14 +13,15 @@ enum FileUtilities {
         "mp3", "wav", "flac", "aac", "m4a", "m4b", "ogg", "oga", "opus", "wma", "aiff", "aif",
         "aifc", "ac3", "eac3", "dts", "caf", "amr", "au", "ape", "wv", "tta", "mka", "mp2", "mpa",
         // 图片
-        "jpg", "jpeg", "png", "webp", "avif", "heic", "heif", "tif", "tiff", "bmp", "ico",
+        "jpg", "jpeg", "png", "webp", "avif", "heic", "heif", "tif", "tiff", "bmp", "ico", "psd", "exr", "svg", "arw", "cr2", "cr3", "crw", "nef", "nrw", "raf", "dng", "orf", "rw2", "pef", "srw", "3fr", "iiq", "kdc", "dcr", "mos", "mrw", "x3f",
     ]
 
     static func isMediaFile(_ url: URL) -> Bool {
-        mediaExtensions.contains(url.pathExtension.lowercased())
+        let ext = url.pathExtension.lowercased()
+        return mediaExtensions.contains(ext) || DocumentEngine.isDocument(ext)
     }
 
-    /// 递归展开文件夹（跳过隐藏目录与 .app 包），返回媒体文件
+    /// 递归展开文件夹（跳过隐藏目录与 .app 包），返回支持的媒体及文档文件
     static func expand(urls: [URL], limit: Int = 800) -> [URL] {
         var result: [URL] = []
         let fm = FileManager.default

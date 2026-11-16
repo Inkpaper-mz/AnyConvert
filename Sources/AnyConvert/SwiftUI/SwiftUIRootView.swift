@@ -155,6 +155,15 @@ struct SwiftUIRootView: View {
                     .pickerStyle(.menu)
                 }
 
+                if ["mp4", "mkv"].contains(model.currentFormat.id) {
+                    section("视频编码") {
+                        Picker("", selection: bind({ model.videoCodec }, { model.setVideoCodec($0) })) {
+                            ForEach(VideoCodec.allCases) { Text($0.title).tag($0) }
+                        }.labelsHidden().pickerStyle(.menu)
+                        Text("H.265 和 AV1 使用软件编码；目标大小压缩使用 H.264。")
+                            .font(.system(size: 10)).foregroundColor(.secondary)
+                    }
+                }
                 if model.currentFormat.kind == .video {
                     Toggle(L10n.t("settings.hardware"),
                            isOn: bind({ model.hardware }, { model.setHardware($0 && model.hardwareAvailable) }))

@@ -14,8 +14,15 @@ enum CommandBuilder {
             "-loglevel", "error",
             "-progress", "pipe:1",
             "-y",
-            "-i", input.path,
         ]
+        let imageVideo = fmt.kind == .video && ["mp4", "webm"].contains(fmt.id)
+            && (info.isImage || input.pathExtension.lowercased() == "gif")
+        if imageVideo {
+            if input.pathExtension.lowercased() == "gif" { args += ["-stream_loop", "-1"] }
+            else { args += ["-loop", "1", "-framerate", "25"] }
+        }
+        args += ["-i", input.path]
+        if imageVideo { args += ["-t", "5"] }
 
         if fmt.isAnimatedImage {
             args += gifArguments(settings: settings, info: info, output: output)
@@ -81,6 +88,15 @@ enum CommandBuilder {
         let fmt = settings.format
         let q = settings.quality
 
+        if ["mp4", "mkv"].contains(fmt.id), settings.videoCodec == .h265 || settings.videoCodec == .av1 {
+            if settings.videoCodec == .h265 {
+                args += ["-c:v", "libx265", "-crf", "\(q.x264CRF)", "-pix_fmt", "yuv420p", "-tag:v", "hvc1"]
+            } else {
+                args += ["-c:v", "libaom-av1", "-crf", "\(q.avifCRF)", "-b:v", "0", "-cpu-used", "6", "-pix_fmt", "yuv420p"]
+            }
+            args += ["-c:a", "aac", "-b:a", settings.audioBitrate.value]
+            return args
+        }
         switch fmt.id {
         case "mp4", "mov", "m4v", "mkv", "flv", "ts", "3gp":
             if settings.hardware {

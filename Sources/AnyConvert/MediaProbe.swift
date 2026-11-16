@@ -15,6 +15,11 @@ enum MediaProbe {
     }
 
     static func probeSync(_ url: URL) throws -> MediaInfo {
+        if ProfessionalImage.needsRasterization(url) {
+            let image = try ProfessionalImage.rasterize(url)
+            defer { ProfessionalImage.cleanup(image) }
+            return try probeSync(image)
+        }
         guard let ffprobe = Toolchain.ffprobe else { throw ConvertError.toolchainMissing }
 
         let process = Process()
@@ -67,7 +72,7 @@ enum MediaProbe {
         }
 
         let imageContainers = ["image2", "png_pipe", "jpeg_pipe", "webp_pipe", "bmp_pipe",
-                               "tiff_pipe", "ico", "apng", "jpegxl_pipe"]
+                               "tiff_pipe", "ico", "apng", "jpegxl_pipe", "psd_pipe", "exr_pipe", "ppm_pipe"]
         info.isImage = imageContainers.contains { info.container.contains($0) }
 
         if let streams = root["streams"] as? [[String: Any]] {

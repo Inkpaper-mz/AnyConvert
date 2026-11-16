@@ -2,6 +2,12 @@ import Foundation
 
 // MARK: - 输出格式
 
+enum VideoCodec: String, CaseIterable, Identifiable {
+    case auto, h264, h265, av1
+    var id: String { rawValue }
+    var title: String { switch self { case .auto: return "自动"; case .h264: return "H.264"; case .h265: return "H.265"; case .av1: return "AV1" } }
+}
+
 enum MediaKind: String, Codable {
     case video
     case audio
@@ -70,9 +76,11 @@ enum Catalog {
         .init(id: "docx", title: "DOCX", subtitleKey: "fmt.docx.sub", ext: "docx", kind: .document, lossless: true),
         .init(id: "odt",  title: "ODT",  subtitleKey: "fmt.odt.sub",  ext: "odt",  kind: .document, lossless: true),
         .init(id: "rtf",  title: "RTF",  subtitleKey: "fmt.rtf.sub",  ext: "rtf",  kind: .document, lossless: true),
+        .init(id: "md", title: "Markdown", subtitleKey: "fmt.md.sub", ext: "md", kind: .document, lossless: false),
         .init(id: "txt",  title: "TXT",  subtitleKey: "fmt.txt.sub",  ext: "txt",  kind: .document, lossless: true),
         .init(id: "html", title: "HTML", subtitleKey: "fmt.html.sub", ext: "html", kind: .document, lossless: true),
         .init(id: "xlsx", title: "XLSX", subtitleKey: "fmt.xlsx.sub", ext: "xlsx", kind: .document, lossless: true),
+        .init(id: "json", title: "JSON", subtitleKey: "fmt.json.sub", ext: "json", kind: .document, lossless: false),
         .init(id: "csv",  title: "CSV",  subtitleKey: "fmt.csv.sub",  ext: "csv",  kind: .document, lossless: true),
         .init(id: "pptx", title: "PPTX", subtitleKey: "fmt.pptx.sub", ext: "pptx", kind: .document, lossless: true),
     ]
@@ -275,6 +283,7 @@ struct ConversionSettings {
     var targetBytes: Int64? = nil
     var allowDownscale: Bool = true
     var fps: Int = 0
+    var videoCodec: VideoCodec = .auto
 }
 
 enum ConvertError: LocalizedError {

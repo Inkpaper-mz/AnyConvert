@@ -12,7 +12,33 @@ APP_NAME="万能转码"
 DIST="$ROOT/dist"
 BUILD="$ROOT/build"
 BUNDLE="$DIST/$APP_NAME.app"
-ARCHS="${ARCHS:-arm64}"
+ARCHS="${ARCHS:-$(uname -m)}"
+FULL_OFFLINE="${FULL_OFFLINE:-1}"
+
+# 完整离线包不得静默依赖目标机器上的程序。
+if [ "$FULL_OFFLINE" = "1" ]; then
+    [ "${BUNDLE_LO:-1}" = "1" ] || { echo "错误：完整离线包必须包含 LibreOffice" >&2; exit 1; }
+    LO="$ROOT/crossplatform/vendor/LibreOffice.app/Contents/MacOS/soffice"
+    [ -x "$LO" ] || { echo "错误：缺少 LibreOffice。请运行 python3 scripts/fetch_engines.py --libreoffice" >&2; exit 1; }
+    for arch in $ARCHS; do
+        case "$arch" in
+            arm64) dir="$ROOT/vendor" ;;
+            x86_64) dir="$ROOT/vendor/intel" ;;
+            *) echo "错误：不支持的架构 $arch" >&2; exit 1 ;;
+        esac
+        for name in ffmpeg ffprobe; do
+            [ -x "$dir/$name" ] || { echo "错误：缺少 $dir/$name。请运行 scripts/fetch_ffmpeg.sh（Intel 加 WITH_INTEL=1）" >&2; exit 1; }
+            lipo -verify_arch "$arch" "$dir/$name" || { echo "错误：$dir/$name 不支持 $arch" >&2; exit 1; }
+        done
+        [ "$arch" = arm64 ] || { echo "错误：完整离线包的 SVG 引擎目前仅提供 arm64" >&2; exit 1; }
+        [ -x "$ROOT/vendor/libvips/vips-helper" ] && [ -f "$ROOT/vendor/libvips/libvips-cpp.8.18.7.dylib" ] && [ -f "$ROOT/vendor/libvips/README.md" ] && [ -f "$ROOT/vendor/libvips/LGPL-3.0.txt" ] && [ -f "$ROOT/vendor/libvips/GPL-3.0.txt" ] || { echo "错误：缺少 SVG 引擎或许可证；请运行 scripts/fetch_libvips.sh" >&2; exit 1; }
+        [ -x "$ROOT/vendor/libraw/dcraw_emu" ] && [ -f "$ROOT/vendor/libraw/libraw.25.dylib" ] && [ -f "$ROOT/vendor/libraw/LICENSE.LGPL" ] || { echo "错误：缺少 RAW 引擎或许可证；请运行 scripts/fetch_libraw.sh" >&2; exit 1; }
+        if [ "$arch" = arm64 ]; then PANDOC="$ROOT/vendor/pandoc/pandoc"; else PANDOC="$ROOT/vendor/pandoc/intel/pandoc"; fi
+        [ -x "$PANDOC" ] && lipo -verify_arch "$arch" "$PANDOC" || { echo "错误：缺少 $arch 的 Pandoc，请先准备对应架构的引擎" >&2; exit 1; }
+        [ -f "$ROOT/vendor/pandoc/COPYING.md" ] && [ -f "$ROOT/vendor/pandoc/COPYRIGHT" ] || { echo "错误：缺少 Pandoc 许可证文件" >&2; exit 1; }
+        lipo -verify_arch "$arch" "$LO" || { echo "错误：内置 LibreOffice 不支持 $arch；请为每种架构分别打包" >&2; exit 1; }
+    done
+fi
 
 echo "==> 清理"
 rm -rf "$BUILD" "$BUNDLE"
@@ -69,19 +95,48 @@ for arch in $ARCHS; do
     fi
 done
 
+echo "==> 内置 Pandoc"
+for arch in $ARCHS; do
+    if [ "$arch" = arm64 ]; then PANDOC="$ROOT/vendor/pandoc/pandoc"; else PANDOC="$ROOT/vendor/pandoc/intel/pandoc"; fi
+    if [ -x "$PANDOC" ]; then cp "$PANDOC" "$BUNDLE/Contents/Resources/bin/pandoc-$arch"; fi
+done
+if [ -f "$ROOT/vendor/pandoc/COPYING.md" ] && [ -f "$ROOT/vendor/pandoc/COPYRIGHT" ]; then
+    mkdir -p "$BUNDLE/Contents/Resources/licenses/pandoc"
+    cp "$ROOT/vendor/pandoc/COPYING.md" "$ROOT/vendor/pandoc/COPYRIGHT" "$BUNDLE/Contents/Resources/licenses/pandoc/"
+fi
+
+echo "==> 内置 SVG 渲染引擎"
+if [ -x "$ROOT/vendor/libvips/vips-helper" ]; then
+    cp "$ROOT/vendor/libvips/vips-helper" "$BUNDLE/Contents/Resources/bin/vips-helper-arm64"
+    cp "$ROOT/vendor/libvips/libvips-cpp.8.18.7.dylib" "$BUNDLE/Contents/Resources/bin/"
+    mkdir -p "$BUNDLE/Contents/Resources/licenses/libvips"
+    cp "$ROOT/vendor/libvips/README.md" "$ROOT/vendor/libvips/versions.json" "$ROOT/vendor/libvips/SOURCES.txt" "$ROOT/vendor/libvips/LGPL-3.0.txt" "$ROOT/vendor/libvips/GPL-3.0.txt" "$BUNDLE/Contents/Resources/licenses/libvips/"
+fi
+
+echo "==> 内置 RAW 引擎"
+if [ -x "$ROOT/vendor/libraw/dcraw_emu" ]; then
+    cp "$ROOT/vendor/libraw/dcraw_emu" "$BUNDLE/Contents/Resources/bin/dcraw_emu-arm64"
+    cp "$ROOT/vendor/libraw/libraw.25.dylib" "$BUNDLE/Contents/Resources/bin/"
+    mkdir -p "$BUNDLE/Contents/Resources/licenses/libraw"
+    cp "$ROOT/vendor/libraw/LICENSE.LGPL" "$ROOT/vendor/libraw/recipe.yaml" "$BUNDLE/Contents/Resources/licenses/libraw/"
+fi
+
 echo "==> 签名（ad-hoc）"
 dot_clean -m "$BUNDLE" 2>/dev/null || true
 xattr -cr "$BUNDLE" 2>/dev/null || true
-codesign --force --sign - "$BUNDLE/Contents/MacOS/$APP_NAME" 2>/dev/null || true
+codesign --force --sign - "$BUNDLE/Contents/MacOS/AnyConvert"
 for bin in "$BUNDLE/Contents/Resources/bin/"*; do
-    [ -f "$bin" ] && codesign --force --sign - "$bin" 2>/dev/null || true
+    [ -f "$bin" ] && codesign --force --sign - "$bin"
 done
-codesign --force --sign - "$BUNDLE" 2>/dev/null || echo "    警告：顶层签名失败，继续打包"
-if codesign --verify --deep --strict "$BUNDLE" 2>/dev/null; then
-    echo "    签名校验通过"
-else
-    echo "    提示：本地 ad-hoc 签名（首次运行若被拦截请右键 → 打开）"
-fi
+codesign --force --sign - "$BUNDLE" || {
+    echo "错误：应用签名失败；请在本地非文件同步目录构建后重试" >&2
+    exit 1
+}
+codesign --verify --deep --strict "$BUNDLE" || {
+    echo "错误：应用签名校验失败，已停止打包" >&2
+    exit 1
+}
+echo "    签名校验通过（ad-hoc，未公证）"
 
 SIZE=$(du -sh "$BUNDLE" | cut -f1)
 echo "==> 完成: $BUNDLE ($SIZE)"

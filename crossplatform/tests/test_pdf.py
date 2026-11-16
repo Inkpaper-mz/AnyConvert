@@ -2,6 +2,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
@@ -35,6 +36,19 @@ class PdfTests(unittest.TestCase):
         text = pdf_tools.pdf_to_text(self.pdf)
         self.assertIn("hello page 1", text)
         self.assertEqual(pdf_tools.pdf_page_count(self.pdf), 3)
+
+    def test_ocr_runs_for_scanned_pages_in_mixed_pdf(self):
+        path = os.path.join(self.tmp, "mixed.pdf")
+        doc = fitz.open()
+        doc.new_page().insert_text((72, 72), "first page")
+        doc.new_page()
+        doc.new_page().insert_text((72, 72), "third page")
+        doc.save(path)
+        doc.close()
+        with mock.patch("crossplatform.core.ocr.ocr_image", return_value="scanned page") as ocr:
+            text = pdf_tools.pdf_to_text_ocr(path, dpi=72)
+        self.assertEqual(text, "first page\nscanned page\nthird page")
+        ocr.assert_called_once()
 
     def test_pdf_to_image_and_back(self):
         images = pdf_tools.pdf_to_images(self.pdf, self.out, "png", dpi=72)

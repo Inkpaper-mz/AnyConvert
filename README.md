@@ -196,21 +196,27 @@ AnyConvert/
 
 ## 自行构建
 
-需要 macOS 13+ 与 Xcode Command Line Tools（Swift 5.9+）。
+需要 macOS 14+ 与 Xcode Command Line Tools（Swift 6+）。完整离线包需提前准备对应架构的 FFmpeg、ffprobe 和 LibreOffice；PDF 和 OCR 使用系统 PDFKit、Vision。
 
 ```bash
-# 1. 下载内置转码引擎（arm64；WITH_INTEL=1 同时下载 Intel 版）
+# 在目标架构的 Mac 上准备引擎
 ./scripts/fetch_ffmpeg.sh
+python3 scripts/fetch_engines.py --libreoffice
+./scripts/fetch_pandoc.sh
+./scripts/fetch_libvips.sh
+./scripts/fetch_libraw.sh
 
-# 2. 构建（默认当前架构，约 127 MB）
+# 构建当前架构的完整离线 .app，或同时制作 DMG
 ./scripts/build.sh
-
-# 3. 通用二进制（Intel + Apple 芯片，约 309 MB）
-ARCHS="arm64 x86_64" ./scripts/build.sh
-
-# 4. 顺带产出 DMG
 DMG=1 ./scripts/build.sh
+
+# 开发调试：允许缺少内置引擎，运行时回退到本机安装的引擎
+FULL_OFFLINE=0 ./scripts/build.sh
 ```
+
+SVG 通过 LGPL 的 libvips／librsvg 渲染；相机 RAW 使用 LGPL 的 LibRaw。RAW 解码结果取决于相机型号，当前按相机白平衡输出 8 位图片。引擎版本、来源和许可随应用附带。完整离线包目前只提供 Apple 芯片版本。
+
+默认构建会在编译前检查引擎和架构，缺失时直接报错。LibreOffice 的官方 macOS 包通常只包含一种架构；要分别制作 Apple 芯片和 Intel 离线包，请在对应架构上准备引擎并构建。`FULL_OFFLINE=0` 的构建不能保证在其他电脑离线运行。构建产物使用临时签名，分发时仍需开发者签名及公证。
 
 > 国内网络下载较慢时可加代理：`PROXY=http://127.0.0.1:7890 ./scripts/fetch_ffmpeg.sh`
 
@@ -220,6 +226,10 @@ DMG=1 ./scripts/build.sh
 swift build -c release
 ./.build/release/AnyConvert --selftest
 ```
+
+## 第三方组件与引用
+
+本项目使用的转换引擎、许可证、源码及参考项目说明见 [THIRD_PARTY.md](THIRD_PARTY.md)。
 
 ## 许可
 
@@ -231,4 +241,3 @@ swift build -c release
 ## Contributors
 
 - [Inkpaper-mz](https://github.com/Inkpaper-mz) — author & maintainer
-- [DeepSeek](https://github.com/deepseek-ai) — AI pair programmer (architecture, implementation, debugging, docs)

@@ -31,6 +31,7 @@ final class AppModel {
     private(set) var resolution: ResolutionPreset = .original
     private(set) var audioBitrate: AudioBitrate = .b192
     private(set) var hardware = false
+    private(set) var videoCodec: VideoCodec = .auto
     private(set) var outputMode: OutputMode = .alongside
     private(set) var customDirectory: URL?
     private(set) var customWidth: Int?
@@ -201,12 +202,19 @@ final class AppModel {
         guard !jobs.isEmpty else { return Catalog.all }
         return Catalog.all.filter { format in
             jobs.allSatisfy { job in
+                let sourceExt = job.url.pathExtension.lowercased()
+                if DocumentEngine.isDocument(sourceExt) {
+                    return DocumentEngine.canConvert(target: format.ext, sourceExt: sourceExt)
+                }
+                if format.kind == .document {
+                    return DocumentEngine.canConvert(target: format.ext, sourceExt: sourceExt)
+                }
                 guard let info = job.info else { return true }
                 switch format.kind {
                 case .audio:
                     return info.hasAudio
                 case .video:
-                    return info.hasVideo && (!info.isImage || format.id == "gif")
+                    return info.hasVideo && (!info.isImage || ["gif", "mp4", "webm"].contains(format.id))
                 case .image:
                     return info.hasVideo
                 case .document:
@@ -289,6 +297,11 @@ final class AppModel {
         observer?.modelSettingsDidChange(self)
     }
 
+    func setVideoCodec(_ value: VideoCodec) {
+        videoCodec = value
+        observer?.modelSettingsDidChange(self)
+    }
+
     func setHardware(_ value: Bool) {
         guard hardware != value else { return }
         hardware = value
@@ -364,7 +377,7 @@ final class AppModel {
 
     func pickFolder() {
         let panel = NSOpenPanel()
-        panel.title = "选择包含音视频的文件夹"
+        panel.title = "选择包含待转换文件的文件夹"
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
@@ -401,19 +414,11 @@ final class AppModel {
             if existing.contains(standardized) { continue }
             if jobs.contains(where: { $0.url.standardizedFileURL == standardized }) { continue }
             let sourceExt = standardized.pathExtension.lowercased()
-            if DocumentEngine.isDocument(sourceExt) {
-                // 拖入文档时自动切到 PDF，避免用户在媒体格式下看到“不支持”
-                if !DocumentEngine.canConvert(target: currentFormat.ext, sourceExt: sourceExt) {
-                    setFormat("pdf")
-                }
-                guard DocumentEngine.canConvert(target: currentFormat.ext, sourceExt: sourceExt) else {
-                    observer?.modelDidProduceMessage(self, message: L10n.t("msg.docUnsupported", sourceExt, currentFormat.ext))
-                    continue
-                }
-            } else if currentFormat.kind == .document {
-                guard DocumentEngine.canConvert(target: currentFormat.ext, sourceExt: sourceExt) else {
-                    observer?.modelDidProduceMessage(self, message: L10n.t("msg.docUnsupported", sourceExt, currentFormat.ext))
-                    continue
+            if jobs.isEmpty, DocumentEngine.isDocument(sourceExt),
+               !DocumentEngine.canConvert(target: currentFormat.ext, sourceExt: sourceExt) {
+                let compatible = Catalog.all.filter { DocumentEngine.canConvert(target: $0.ext, sourceExt: sourceExt) }
+                if let preferred = compatible.first(where: { $0.id == "pdf" }) ?? compatible.first {
+                    setFormat(preferred.id)
                 }
             }
             let job = Job(url: standardized, status: .probing)
@@ -594,7 +599,8 @@ final class AppModel {
             targetBytes: (currentFormat.kind == .image || currentFormat.kind == .video)
                 ? targetSizeMB.map { Int64($0 * 1024 * 1024) } : nil,
             allowDownscale: allowDownscale,
-            fps: fps
+            fps: fps,
+            videoCodec: ["mp4", "mkv"].contains(currentFormat.id) ? videoCodec : .auto
         )
     }
 
@@ -682,7 +688,7 @@ final class AppModel {
             fail(id, message: ConvertError.noVideoTrack.localizedDescription)
             return
         }
-        if settings.format.kind == .video, info.isImage, settings.format.id != "gif" {
+        if settings.format.kind == .video, info.isImage, !["gif", "mp4", "webm"].contains(settings.format.id) {
             fail(id, message: ConvertError.imageNeedsImageFormat.localizedDescription)
             return
         }
@@ -734,8 +740,18 @@ final class AppModel {
                                job: Job,
                                info: MediaInfo,
                                output: URL) async throws {
+        let input: URL
+        if ProfessionalImage.needsRasterization(job.url) {
+            let source = job.url
+            input = try await Task.detached(priority: .userInitiated) { try ProfessionalImage.rasterize(source) }.value
+        }
+        else { input = job.url }
+        defer { if input != job.url { ProfessionalImage.cleanup(input) } }
         if let targetBytes = settings.targetBytes, targetBytes > 0 {
-            try await CompressionEngine.compress(input: job.url, settings: settings,
+            guard settings.videoCodec == .auto || settings.videoCodec == .h264 else {
+                throw ConvertError.encodeFailed("目标大小压缩目前仅支持 H.264，请关闭目标大小或选择 H.264。")
+            }
+            try await CompressionEngine.compress(input: input, settings: settings,
                                                  output: output, info: info) { [weak self] percent, speed in
                 Task { @MainActor in self?.updateProgress(jobID: job.id, percent: percent, speed: speed) }
             }
@@ -743,7 +759,7 @@ final class AppModel {
         }
 
         guard let conversionEngine = EngineRegistry.engine(for: settings.format),
-              var arguments = conversionEngine.arguments(for: settings, input: job.url, output: output, info: info) else {
+              var arguments = conversionEngine.arguments(for: settings, input: input, output: output, info: info) else {
             throw ConvertError.encodeFailed("No engine available")
         }
 
@@ -757,7 +773,7 @@ final class AppModel {
             var software = settings
             software.hardware = false
             arguments = EngineRegistry.engine(for: software.format)?.arguments(
-                for: software, input: job.url, output: output, info: info) ?? arguments
+                for: software, input: input, output: output, info: info) ?? arguments
             try? FileManager.default.removeItem(at: output)
             try await engine.run(arguments: arguments, duration: info.duration) { [weak self] percent, speed in
                 Task { @MainActor in self?.updateProgress(jobID: job.id, percent: percent, speed: speed) }

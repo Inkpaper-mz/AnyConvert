@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import os
-import shutil
 import tempfile
 import zipfile
 
@@ -52,19 +51,22 @@ def pdf_to_text(src: str) -> str:
 
 
 def pdf_to_text_ocr(src: str, dpi: int = 200) -> str:
-    """文字型 PDF 直接取文本；扫描件回退 OCR。"""
-    text = pdf_to_text(src)
-    if text.strip():
-        return text
+    """逐页提取文本；无文字层的页面单独进行 OCR，保留原始页序。"""
+    _require()
     from . import ocr
 
-    work = tempfile.mkdtemp(prefix="anyconvert-ocr-")
-    try:
-        pages = pdf_to_images(src, work, fmt="png", dpi=dpi)
-        parts = [ocr.ocr_image(page) for page in pages]
-        return "\n".join(parts).strip()
-    finally:
-        shutil.rmtree(work, ignore_errors=True)
+    parts = []
+    with tempfile.TemporaryDirectory(prefix="anyconvert-ocr-") as work:
+        with fitz.open(src) as doc:
+            for index, page in enumerate(doc):
+                text = page.get_text("text").strip()
+                if not text:
+                    image = os.path.join(work, f"page-{index + 1}.png")
+                    zoom = dpi / 72
+                    page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False).save(image)
+                    text = ocr.ocr_image(image).strip()
+                parts.append(text)
+    return "\n".join(parts).strip()
 
 
 def pdf_to_html(src: str) -> str:

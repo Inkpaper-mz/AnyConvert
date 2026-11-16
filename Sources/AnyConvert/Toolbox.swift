@@ -36,12 +36,20 @@ enum Toolbox {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.pdf]
         guard panel.runModal() == .OK, let input = panel.url else { return }
+        let formatPicker = NSAlert()
+        formatPicker.messageText = "选择页面图片格式"
+        formatPicker.addButton(withTitle: "PNG")
+        formatPicker.addButton(withTitle: "JPG")
+        formatPicker.addButton(withTitle: "取消")
+        let response = formatPicker.runModal()
+        guard response == .alertFirstButtonReturn || response == .alertSecondButtonReturn else { return }
+        let format = response == .alertFirstButtonReturn ? "png" : "jpg"
         let folder = NSOpenPanel()
         folder.canChooseFiles = false
         folder.canChooseDirectories = true
         guard folder.runModal() == .OK, let directory = folder.url else { return }
         do {
-            let result = try DocumentEngine.exportImages(input, to: directory, format: "png")
+            let result = try DocumentEngine.exportImages(input, to: directory, format: format)
             done("已导出页面", result)
         } catch { fail(error) }
     }
@@ -78,12 +86,28 @@ enum Toolbox {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         guard panel.runModal() == .OK, !panel.urls.isEmpty else { return }
+        let options = NSAlert()
+        options.messageText = "选择 ZIP 压缩级别"
+        options.informativeText = "0 为仅打包，9 为最高压缩级别。"
+        options.addButton(withTitle: "继续")
+        options.addButton(withTitle: "取消")
+        let levels = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 110, height: 26))
+        levels.addItems(withTitles: (0...9).map(String.init))
+        levels.selectItem(at: 6)
+        options.accessoryView = levels
+        guard options.runModal() == .alertFirstButtonReturn else { return }
+        let level = levels.indexOfSelectedItem
         let save = NSSavePanel()
         save.nameFieldStringValue = "archive.zip"
         guard save.runModal() == .OK, let output = save.url else { return }
         do {
-            try DocumentEngine.zipFiles(panel.urls, to: output)
-            done("已打包 \(panel.urls.count) 个文件", output)
+            let before = panel.urls.reduce(Int64(0)) { total, url in
+                total + Int64((try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
+            }
+            try DocumentEngine.zipFiles(panel.urls, to: output, level: level)
+            let after = Int64((try? output.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
+            let formatter = ByteCountFormatter()
+            done("已打包 \(panel.urls.count) 个文件（\(formatter.string(fromByteCount: before)) → \(formatter.string(fromByteCount: after))）", output)
         } catch { fail(error) }
     }
 

@@ -48,6 +48,9 @@ enum Toolchain {
         let cwd = URL(fileURLWithPath: fm.currentDirectoryPath)
         candidates.append(cwd.appendingPathComponent("vendor/\(name)-\(archSuffix)"))
         candidates.append(cwd.appendingPathComponent("vendor/\(name)"))
+        if name == "pandoc" { candidates.append(cwd.appendingPathComponent("vendor/pandoc/pandoc")) }
+        if name == "vips-helper" { candidates.append(cwd.appendingPathComponent("vendor/libvips/vips-helper")) }
+        if name == "dcraw_emu" { candidates.append(cwd.appendingPathComponent("vendor/libraw/dcraw_emu")) }
         candidates.append(cwd.appendingPathComponent("AnyConvert/vendor/\(name)"))
         if let exeDir = Bundle.main.executableURL?.deletingLastPathComponent() {
             candidates.append(exeDir.appendingPathComponent("vendor/\(name)"))
@@ -63,15 +66,19 @@ enum Toolchain {
             "/opt/local/bin/\(name)",
         ].map(URL.init(fileURLWithPath:))
 
-        for url in candidates where fm.isExecutableFile(atPath: url.path) {
-            return url
+        for url in candidates {
+            var isDirectory: ObjCBool = false
+            if fm.fileExists(atPath: url.path, isDirectory: &isDirectory), !isDirectory.boolValue,
+               fm.isExecutableFile(atPath: url.path) { return url }
         }
 
         // 5. PATH
         if let path = ProcessInfo.processInfo.environment["PATH"] {
             for dir in path.split(separator: ":") {
                 let url = URL(fileURLWithPath: String(dir)).appendingPathComponent(name)
-                if fm.isExecutableFile(atPath: url.path) { return url }
+                var isDirectory: ObjCBool = false
+                if fm.fileExists(atPath: url.path, isDirectory: &isDirectory), !isDirectory.boolValue,
+                   fm.isExecutableFile(atPath: url.path) { return url }
             }
         }
         return nil
