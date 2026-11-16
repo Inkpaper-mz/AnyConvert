@@ -47,6 +47,8 @@ class OfficeTests(unittest.TestCase):
 
     def test_ocr_vision(self):
         from crossplatform.core import ocr
+        if not ocr.available():
+            self.skipTest("OCR engine is not installed")
         image = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
             os.path.abspath(__file__)))), "docs", "qt-tools.png")
         if not os.path.exists(image):

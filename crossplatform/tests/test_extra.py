@@ -8,9 +8,9 @@ import unittest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 try:
-    import fitz
+    from reportlab.pdfgen import canvas
 except Exception:  # noqa: BLE001
-    fitz = None
+    canvas = None
 
 from crossplatform.core import engines, pdf_tools
 
@@ -37,14 +37,14 @@ class ExtraTests(unittest.TestCase):
         out = engines.zip_files([path], os.path.join(self.tmp, "a.zip"), 9)
         self.assertGreater(os.path.getsize(out), 0)
 
-    @unittest.skipIf(fitz is None, "PyMuPDF not installed")
+    @unittest.skipIf(canvas is None, "reportlab not installed")
     def test_pdf_images_zip(self):
-        doc = fitz.open()
-        for _ in range(2):
-            doc.new_page().insert_text((72, 72), "hello")
         pdf = os.path.join(self.tmp, "a.pdf")
-        doc.save(pdf)
-        doc.close()
+        doc = canvas.Canvas(pdf)
+        for _ in range(2):
+            doc.drawString(72, 720, "hello")
+            doc.showPage()
+        doc.save()
         out = pdf_tools.pdf_to_images_zip(pdf, self.tmp)
         import zipfile
         with zipfile.ZipFile(out) as zf:

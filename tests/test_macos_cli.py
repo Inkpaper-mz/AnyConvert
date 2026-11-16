@@ -163,20 +163,27 @@ class NativeCLI(unittest.TestCase):
 
     def test_scanned_pdf_to_markdown_uses_ocr(self):
         try:
-            import fitz
+            from reportlab.pdfgen import canvas
+            import pypdfium2
         except ImportError:
-            self.skipTest('PyMuPDF is required to create the scan fixture')
-        raster_source = fitz.open()
-        page = raster_source.new_page(width=600, height=300)
-        page.insert_text((50, 120), 'SCANNED DOCUMENT ALPHA', fontsize=32)
-        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
-        pdf = fitz.open()
-        p = pdf.new_page(width=600, height=300)
-        p.insert_image(p.rect, stream=pix.tobytes('png'))
+            self.skipTest('reportlab and pypdfium2 are needed for the scan fixture')
         path = self.dir / 'scan.pdf'
-        pdf.save(str(path))
-        pdf.close()
-        raster_source.close()
+        original = self.dir / 'source.pdf'
+        c = canvas.Canvas(str(original), pagesize=(600, 300))
+        c.setFont('Helvetica', 32)
+        c.drawString(50, 150, 'SCANNED DOCUMENT ALPHA')
+        c.save()
+        source = pypdfium2.PdfDocument(str(original))
+        page = source[0]
+        bitmap = page.render(scale=2)
+        image = self.dir / 'scan.png'
+        bitmap.to_pil().save(image)
+        bitmap.close()
+        page.close()
+        source.close()
+        c = canvas.Canvas(str(path), pagesize=(600, 300))
+        c.drawImage(str(image), 0, 0, width=600, height=300)
+        c.save()
         result = self.call('-i', path, '--to', 'md', '-o', self.dir)
         self.assertEqual(result.returncode, 0, result.stderr)
         result_text = Path(json.loads(result.stdout)['output']).read_text(encoding='utf-8')

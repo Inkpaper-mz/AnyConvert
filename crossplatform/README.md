@@ -12,13 +12,13 @@ crossplatform/
 ├── core/
 │   ├── matrix.json       # 转换矩阵（目标格式 → 源白名单 + 引擎）
 │   ├── matrix.py         # 矩阵加载、扩展名归一化、校验、引擎选择
-│   ├── engines.py        # FFmpeg / LibreOffice / pdf2docx 调度
+│   ├── engines.py        # FFmpeg / LibreOffice / PDF 引擎调度
 │   └── queue.py          # 校验入队 + ThreadPoolExecutor(3) + 进度/取消
 ├── ui/
 │   └── app.py            # Tkinter：目标格式标签页 → 独立工作区 → 批量拖拽
 ├── tests/
 │   └── test_core.py      # 9 个单测（矩阵/并发/引擎）
-└── requirements.txt      # 仅 tkinterdnd2（可选，用于拖拽）
+└── requirements.txt      # PDF 运行依赖与可选拖拽支持
 ```
 
 ## 界面
@@ -36,8 +36,8 @@ crossplatform/
 ```bash
 # 1) 依赖
 python3 -m pip install --user tkinterdnd2    # 可选：启用真正的拖拽
-# 文档转换需要 LibreOffice；PDF→Word 建议再装 pdf2docx
-python3 -m pip install --user pdf2docx
+# 安装 PDF 引擎及其他运行依赖
+python3 -m pip install --user -r crossplatform/requirements.txt
 
 # 2) 启动
 cd <repo>
@@ -81,7 +81,7 @@ python3 -m unittest crossplatform.tests.test_compress -v
 | --- | --- | --- |
 | FFmpeg | 音视频 / 图片 / GIF / 提取音频 / 压缩 | 随软件自带（vendor） |
 | LibreOffice 26.8.2 | Word/Excel/PPT/ODT ↔ PDF 等文档互转 | 随软件自带（vendor，约 800 MB） |
-| PyMuPDF | PDF→图片/文本/表格、图片→PDF、合并、拆分 | pip 依赖，随包打包 |
+| PDFium / pypdf / pdfplumber | PDF 渲染、文字和表格提取、图片→PDF、合并、拆分 | Python 依赖；二进制依赖许可证需随构建版本核对 |
 | OCR | 图片/扫描件 → TXT | macOS 用系统 Vision（零安装）；其他平台回退 Tesseract |
 
 准备自带引擎（新机器/重新打包时）：
@@ -143,11 +143,10 @@ python3 -m crossplatform.cli capabilities --json
 | --- | --- | --- |
 | FFmpeg | 音视频、图片、GIF | 使用 `-progress pipe:1` 解析进度；图片输出 `-frames:v 1 -update 1`；GIF 走 palettegen/paletteuse |
 | LibreOffice | 文档互转、图片→PDF、PDF→图 | `--headless` + 独立 `-env:UserInstallation` 临时 profile，避免并发锁冲突 |
-| pdf2docx（可选） | PDF → DOCX | 版面还原明显优于 LibreOffice 的 PDF 导入；未安装时自动回退 |
 
 已知限制：
 
-- LibreOffice 导入 PDF 的结构还原有限（多栏、扫描件、公式），这类文件建议装 `pdf2docx`。
+- LibreOffice 导入 PDF 的结构还原有限（多栏、扫描件、公式），复杂文件需要人工校对。
 - 扫描版 PDF 需要 OCR，本子工程未内置（可后续接 Tesseract）。
 - 图片 → PDF 走 LibreOffice Draw，复杂透明/多图排版可能与预期有差异。
 

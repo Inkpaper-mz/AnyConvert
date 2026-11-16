@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 打包 macOS .app：把 Qt 界面 + FFmpeg + LibreOffice + PyMuPDF 一起装进去
+# 打包 macOS .app：把 Qt 界面 + FFmpeg + LibreOffice + PDFium / pypdf / pdfplumber 一起装进去
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

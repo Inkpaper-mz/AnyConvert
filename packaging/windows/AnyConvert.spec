@@ -17,7 +17,7 @@ a = Analysis(
         (os.path.join(ROOT,'README.md'), '.'),
         (os.path.join(ROOT,'START-HERE.txt'), '.'),
     ],
-    hiddenimports=['fitz', 'openpyxl', 'PIL'],
+    hiddenimports=['pypdfium2', 'pypdf', 'pdfplumber', 'openpyxl', 'PIL'],
     hookspath=[],
     runtime_hooks=[],
     excludes=['tkinter', 'matplotlib', 'pytest'],

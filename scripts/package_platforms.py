@@ -54,7 +54,7 @@ LINUX_README = """万能转码 1.5.0 · Linux 版
 MAC_README = """万能转码 1.5.0 · macOS（Web UI）
 ==================================
 1. 双击 万能转码.app 启动；首次如提示缺少依赖：
-   双击包内的 安装依赖.command（安装 PyMuPDF 等并下载 LibreOffice）
+   双击包内的 安装依赖.command（安装 PDF 依赖等并下载 LibreOffice）
 2. 浏览器会自动打开本地界面（仅监听 127.0.0.1）
 3. 首次被系统拦截时：右键 万能转码.app → 打开
 
@@ -131,7 +131,7 @@ def build_macos_app() -> None:
 DIR="$(cd "$(dirname "$0")/../Resources/app" && pwd)"
 cd "$DIR" || exit 1
 PY="$(command -v python3 || echo /usr/bin/python3)"
-if ! "$PY" -c "import fitz" >/dev/null 2>&1; then
+if ! "$PY" -c "import pypdfium2, pypdf, pdfplumber, PIL" >/dev/null 2>&1; then
   osascript -e 'display dialog "首次使用请双击包内的 安装依赖.command 安装依赖后再启动。" buttons {"好"}'
   exit 1
 fi

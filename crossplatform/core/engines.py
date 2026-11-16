@@ -359,30 +359,6 @@ def libreoffice_convert(src: str, target: str, out_dir: str,
         shutil.rmtree(profile, ignore_errors=True)
         shutil.rmtree(work, ignore_errors=True)
 
-def pdf_to_docx(src: str, out_dir: str) -> str | None:
-    """PDF → DOCX 优先用 pdf2docx（版面还原远好于 LibreOffice 的 PDF 导入）。
-
-    未安装 pdf2docx 时返回 None，由调用方回退 LibreOffice。
-    """
-    try:
-        from pdf2docx import Converter  # type: ignore
-    except Exception:  # noqa: BLE001
-        return None
-    out = unique_output(src, "docx", out_dir)
-    converter = Converter(src)
-    try:
-        converter.convert(out)
-    finally:
-        try:
-            converter.close()
-        except Exception:  # noqa: BLE001
-            pass
-    if os.path.exists(out) and os.path.getsize(out) > 0:
-        return out
-    _cleanup(out)
-    return None
-
-
 def convert(src: str, target: str, out_dir: str,
             progress: ProgressCallback | None = None,
             cancel: threading.Event | None = None,
@@ -395,13 +371,9 @@ def convert(src: str, target: str, out_dir: str,
     if target_bytes:
         from .compress import compress_to_target
         return compress_to_target(src, target, target_bytes, out_dir, progress, cancel)
-    if normalize_ext(target) == "docx" and extension_of(src) == "pdf":
-        converted = pdf_to_docx(src, out_dir)
-        if converted:
-            return converted
     engine = MATRIX.choose_engine(target, src)
-    if engine == "pymupdf":
-        return _pymupdf_convert(src, target, out_dir)
+    if engine == "pdf":
+        return _pdf_convert(src, target, out_dir)
     if engine == "zip":
         return zip_files([src], os.path.join(out_dir, os.path.splitext(os.path.basename(src))[0] + ".zip"))
     if engine == "tesseract":
@@ -434,7 +406,7 @@ def _simple_run(args: list[str], timeout: int = 600) -> None:
         raise EngineError(detail[-400:] or f"命令失败（退出码 {result.returncode}）", code="E_FFMPEG")
 
 
-def _pymupdf_convert(src: str, target: str, out_dir: str) -> str:
+def _pdf_convert(src: str, target: str, out_dir: str) -> str:
     from . import pdf_tools
 
     ext = normalize_ext(target)

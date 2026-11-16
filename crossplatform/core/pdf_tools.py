@@ -1,114 +1,158 @@
-"""PDF 专项能力（PyMuPDF）：渲染、取文本、合并、拆分、图片转 PDF。
-
-不依赖外部二进制，跨平台一致；没装 pymupdf 时给出可读提示。
-"""
-
+"""跨平台 PDF 工具：PDFium 渲染、pypdf 页面操作和 pdfplumber 表格提取。"""
 from __future__ import annotations
 
+import html
 import os
 import tempfile
 import zipfile
-
-try:
-    import fitz  # PyMuPDF
-except Exception:  # noqa: BLE001
-    fitz = None
 
 
 class PdfUnavailable(RuntimeError):
     pass
 
 
-def _require():
-    if fitz is None:
-        raise PdfUnavailable("PDF 功能需要 PyMuPDF：python3 -m pip install --user pymupdf")
+def _pdfium():
+    try:
+        import pypdfium2
+        return pypdfium2
+    except ImportError as exc:
+        raise PdfUnavailable("PDF 渲染与文字提取需要 pypdfium2") from exc
+
+
+def _pypdf():
+    try:
+        from pypdf import PdfReader, PdfWriter
+        return PdfReader, PdfWriter
+    except ImportError as exc:
+        raise PdfUnavailable("PDF 合并与拆分需要 pypdf") from exc
+
+
+def _pillow():
+    try:
+        from PIL import Image
+        return Image
+    except ImportError as exc:
+        raise PdfUnavailable("图片转 PDF 需要 Pillow") from exc
 
 
 def pdf_to_images(src: str, out_dir: str, fmt: str = "png", dpi: int = 150) -> list[str]:
-    """把 PDF 每一页渲染成图片，返回文件列表。"""
-    _require()
+    if fmt.lower() not in ("png", "jpg", "jpeg") or not 1 <= dpi <= 1200:
+        raise ValueError("仅支持 PNG/JPG 和 1–1200 DPI")
+    pdfium = _pdfium()
     os.makedirs(out_dir, exist_ok=True)
     base = os.path.splitext(os.path.basename(src))[0]
     outputs = []
-    with fitz.open(src) as doc:
-        for index, page in enumerate(doc):
-            zoom = dpi / 72
-            matrix = fitz.Matrix(zoom, zoom)
-            pixmap = page.get_pixmap(matrix=matrix, alpha=False)
-            path = os.path.join(out_dir, f"{base}-{index + 1:02d}.{fmt}")
-            pixmap.save(path)
-            outputs.append(path)
+    doc = pdfium.PdfDocument(src)
+    try:
+        for index in range(len(doc)):
+            page = doc[index]
+            try:
+                bitmap = page.render(scale=dpi / 72)
+                try:
+                    image = bitmap.to_pil()
+                    path = os.path.join(out_dir, f"{base}-{index + 1:02d}.{fmt}")
+                    image.save(path, format="JPEG" if fmt.lower() in ("jpg", "jpeg") else "PNG")
+                    outputs.append(path)
+                finally:
+                    bitmap.close()
+            finally:
+                page.close()
+    finally:
+        doc.close()
     return outputs
 
 
+def _page_text(page) -> str:
+    textpage = page.get_textpage()
+    try:
+        return textpage.get_text_bounded().strip()
+    finally:
+        textpage.close()
+
+
 def pdf_to_text(src: str) -> str:
-    _require()
+    pdfium = _pdfium()
     parts = []
-    with fitz.open(src) as doc:
+    doc = pdfium.PdfDocument(src)
+    try:
         for page in doc:
-            parts.append(page.get_text("text"))
+            try:
+                parts.append(_page_text(page))
+            finally:
+                page.close()
+    finally:
+        doc.close()
     return "\n".join(parts).strip()
 
 
 def pdf_to_text_ocr(src: str, dpi: int = 200) -> str:
-    """逐页提取文本；无文字层的页面单独进行 OCR，保留原始页序。"""
-    _require()
+    """逐页提取文本；无文字层页面回退 OCR，保留页序。"""
     from . import ocr
-
+    pdfium = _pdfium()
     parts = []
     with tempfile.TemporaryDirectory(prefix="anyconvert-ocr-") as work:
-        with fitz.open(src) as doc:
+        doc = pdfium.PdfDocument(src)
+        try:
             for index, page in enumerate(doc):
-                text = page.get_text("text").strip()
-                if not text:
-                    image = os.path.join(work, f"page-{index + 1}.png")
-                    zoom = dpi / 72
-                    page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False).save(image)
-                    text = ocr.ocr_image(image).strip()
-                parts.append(text)
+                try:
+                    text = _page_text(page)
+                    if not text:
+                        image = os.path.join(work, f"page-{index + 1}.png")
+                        bitmap = page.render(scale=dpi / 72)
+                        try:
+                            bitmap.to_pil().save(image, format="PNG")
+                        finally:
+                            bitmap.close()
+                        text = ocr.ocr_image(image).strip()
+                    parts.append(text)
+                finally:
+                    page.close()
+        finally:
+            doc.close()
     return "\n".join(parts).strip()
 
 
 def pdf_to_html(src: str) -> str:
-    _require()
-    parts = []
-    with fitz.open(src) as doc:
-        for page in doc:
-            parts.append(page.get_text("html"))
-    return "\n<hr/>\n".join(parts)
+    # 保留文字和换行；PDFium 不提供等价的原始版面 HTML 导出。
+    text = pdf_to_text(src)
+    return '<!doctype html><html><head><meta charset="utf-8"></head><body><pre>' + html.escape(text) + '</pre></body></html>'
 
 
 def merge_pdfs(paths: list[str], output: str) -> str:
-    _require()
-    merged = fitz.open()
+    _, PdfWriter = _pypdf()
+    writer = PdfWriter()
     try:
         for path in paths:
-            with fitz.open(path) as doc:
-                merged.insert_pdf(doc)
-        merged.save(output)
+            writer.append(path)
+        with open(output, "wb") as handle:
+            writer.write(handle)
     finally:
-        merged.close()
+        writer.close()
     return output
 
 
 def split_pdf(src: str, out_dir: str, every: int = 1) -> str:
-    """按每 N 页拆分，输出 zip（单页多文件时）。"""
-    _require()
+    PdfReader, PdfWriter = _pypdf()
     os.makedirs(out_dir, exist_ok=True)
     base = os.path.splitext(os.path.basename(src))[0]
     outputs = []
-    with fitz.open(src) as doc:
-        total = doc.page_count
-        step = max(1, int(every))
-        for start in range(0, total, step):
-            end = min(start + step, total)
-            part = fitz.open()
-            part.insert_pdf(doc, from_page=start, to_page=end - 1)
-            name = f"{base}-{start + 1:03d}-{end:03d}.pdf"
-            path = os.path.join(out_dir, name)
-            part.save(path)
-            part.close()
-            outputs.append(path)
+    reader = PdfReader(src)
+    total = len(reader.pages)
+    if not total:
+        raise ValueError("PDF 没有页面")
+    step = max(1, int(every))
+    for start in range(0, total, step):
+        end = min(start + step, total)
+        writer = PdfWriter()
+        try:
+            for page in reader.pages[start:end]:
+                writer.add_page(page)
+            path = os.path.join(out_dir, f"{base}-{start + 1:03d}-{end:03d}.pdf")
+            with open(path, "wb") as handle:
+                writer.write(handle)
+        finally:
+            writer.close()
+        outputs.append(path)
     if len(outputs) == 1:
         return outputs[0]
     archive = os.path.join(out_dir, f"{base}-split.zip")
@@ -120,64 +164,65 @@ def split_pdf(src: str, out_dir: str, every: int = 1) -> str:
 
 
 def images_to_pdf(paths: list[str], output: str) -> str:
-    _require()
-    doc = fitz.open()
+    Image = _pillow()
+    if not paths:
+        raise ValueError("请选择图片")
+    images = []
     try:
         for path in paths:
-            with fitz.open(path) as img:
-                rect = img[0].rect
-                page = doc.new_page(width=rect.width, height=rect.height)
-                page.insert_image(page.rect, filename=path, keep_proportion=True)
-        doc.save(output)
+            with Image.open(path) as source:
+                if "A" in source.getbands() or "transparency" in source.info:
+                    rgba = source.convert("RGBA")
+                    background = Image.new("RGB", rgba.size, "white")
+                    background.paste(rgba, mask=rgba.getchannel("A"))
+                    rgba.close()
+                    images.append(background)
+                else:
+                    images.append(source.convert("RGB"))
+        images[0].save(output, format="PDF", save_all=True, append_images=images[1:])
     finally:
-        doc.close()
+        for image in images:
+            image.close()
     return output
 
 
 def pdf_page_count(src: str) -> int:
-    _require()
-    with fitz.open(src) as doc:
-        return doc.page_count
+    PdfReader, _ = _pypdf()
+    return len(PdfReader(src).pages)
 
 
-def pdf_to_images_zip(src: str, out_dir: str, fmt: str = "png", dpi: int = 150,
-                      level: int = 6) -> str:
-    """PDF 每页导出图片并打包为 ZIP。"""
-    images = pdf_to_images(src, out_dir, fmt=fmt, dpi=dpi)
+def pdf_to_images_zip(src: str, out_dir: str, fmt: str = "png", dpi: int = 150, level: int = 6) -> str:
+    os.makedirs(out_dir, exist_ok=True)
     base = os.path.splitext(os.path.basename(src))[0]
     archive = os.path.join(out_dir, f"{base}-images.zip")
-    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=max(0, min(9, level))) as zf:
-        for path in images:
-            zf.write(path, os.path.basename(path))
-            os.remove(path)
+    with tempfile.TemporaryDirectory(prefix="anyconvert-pdf-images-") as work:
+        images = pdf_to_images(src, work, fmt=fmt, dpi=dpi)
+        with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=max(0, min(9, level))) as zf:
+            for path in images:
+                zf.write(path, os.path.basename(path))
     return archive
 
 
 def pdf_tables_to_xlsx(src: str, output: str) -> str:
-    """提取 PDF 中的表格写入 xlsx（PyMuPDF find_tables + openpyxl）。"""
-    _require()
     try:
+        import pdfplumber
         from openpyxl import Workbook
-    except Exception as exc:  # noqa: BLE001
-        raise RuntimeError("需要 openpyxl：python3 -m pip install --user openpyxl") from exc
-
+    except ImportError as exc:
+        raise PdfUnavailable("PDF 表格提取需要 pdfplumber 和 openpyxl") from exc
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Tables"
-    row = 1
     found = 0
-    with fitz.open(src) as doc:
-        for page in doc:
-            try:
-                tables = page.find_tables()
-            except Exception:  # noqa: BLE001
-                continue
-            for table in tables:
-                for line in table.extract():
-                    for column, value in enumerate(line, start=1):
-                        sheet.cell(row=row, column=column, value=value)
-                    row += 1
-                row += 1
+    with pdfplumber.open(src) as doc:
+        for page in doc.pages:
+            for table in page.extract_tables():
+                for line in table:
+                    sheet.append([str(value) if value is not None else None for value in line])
+                    # 源 PDF 是数据，不能让以 = 开头的内容变成 Excel 公式。
+                    for cell in sheet[sheet.max_row]:
+                        if cell.value is not None:
+                            cell.data_type = "s"
+                sheet.append([])
                 found += 1
     if found == 0:
         raise RuntimeError("未在该 PDF 中检测到表格（扫描件请先 OCR）")

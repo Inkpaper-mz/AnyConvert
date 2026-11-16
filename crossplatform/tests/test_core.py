@@ -45,7 +45,7 @@ class MatrixTests(unittest.TestCase):
     def test_engine_choice(self):
         png = make_file(self.tmp, "a.png")
         mp4 = make_file(self.tmp, "a.mp4")
-        self.assertEqual(MATRIX.choose_engine("pdf", png), "pymupdf")
+        self.assertEqual(MATRIX.choose_engine("pdf", png), "pdf")
         self.assertEqual(MATRIX.choose_engine("png", png), "ffmpeg")
         self.assertEqual(MATRIX.choose_engine("mp3", mp4), "ffmpeg")
         docx = make_file(self.tmp, "a.docx")

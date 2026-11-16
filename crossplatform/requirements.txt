@@ -1,3 +1,8 @@
-# 可选：启用真正的「拖拽入窗口」
-# macOS/Linux: python3 -m pip install --user tkinterdnd2
+# PDF 运行时依赖（各组件及其二进制依赖许可证见 THIRD_PARTY.md）
+pypdfium2>=4.30,<6
+pypdf>=5,<7
+pdfplumber>=0.11,<1
+Pillow>=10,<13
+openpyxl>=3.1,<4
+# 可选：拖拽窗口支持
 tkinterdnd2>=0.3.0

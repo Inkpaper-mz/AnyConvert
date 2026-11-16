@@ -7,25 +7,25 @@ from unittest import mock
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 try:
-    import fitz
-except Exception:  # noqa: BLE001
-    fitz = None
+    from reportlab.pdfgen import canvas
+    import pypdfium2
+except ImportError:
+    canvas = None
 
 from crossplatform.core import engines, pdf_tools
 
 
 def make_pdf(directory, name="a.pdf", pages=2):
-    doc = fitz.open()
-    for index in range(pages):
-        page = doc.new_page()
-        page.insert_text((72, 72), f"hello page {index + 1}")
     path = os.path.join(directory, name)
-    doc.save(path)
-    doc.close()
+    doc = canvas.Canvas(path)
+    for index in range(pages):
+        doc.drawString(72, 720, f"hello page {index + 1}")
+        doc.showPage()
+    doc.save()
     return path
 
 
-@unittest.skipIf(fitz is None, "PyMuPDF not installed")
+@unittest.skipIf(canvas is None, "PDF test dependencies not installed")
 class PdfTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
@@ -39,12 +39,13 @@ class PdfTests(unittest.TestCase):
 
     def test_ocr_runs_for_scanned_pages_in_mixed_pdf(self):
         path = os.path.join(self.tmp, "mixed.pdf")
-        doc = fitz.open()
-        doc.new_page().insert_text((72, 72), "first page")
-        doc.new_page()
-        doc.new_page().insert_text((72, 72), "third page")
-        doc.save(path)
-        doc.close()
+        doc = canvas.Canvas(path)
+        doc.drawString(72, 720, "first page")
+        doc.showPage()
+        doc.showPage()
+        doc.drawString(72, 720, "third page")
+        doc.showPage()
+        doc.save()
         with mock.patch("crossplatform.core.ocr.ocr_image", return_value="scanned page") as ocr:
             text = pdf_tools.pdf_to_text_ocr(path, dpi=72)
         self.assertEqual(text, "first page\nscanned page\nthird page")
@@ -69,6 +70,39 @@ class PdfTests(unittest.TestCase):
         out = engines.convert(self.pdf, "txt", self.out)
         self.assertTrue(out.endswith(".txt"))
         self.assertIn("hello page 2", open(out, encoding="utf-8").read())
+
+    def test_html_escapes_extracted_text(self):
+        path = os.path.join(self.tmp, "html.pdf")
+        doc = canvas.Canvas(path)
+        doc.drawString(72, 720, "A < B & C")
+        doc.save()
+        text = pdf_tools.pdf_to_html(path)
+        self.assertIn("A &lt; B &amp; C", text)
+
+    def test_pdf_table_extracts_text_as_text(self):
+        from openpyxl import load_workbook
+        path = os.path.join(self.tmp, "table.pdf")
+        doc = canvas.Canvas(path)
+        for x in (72, 200, 330): doc.line(x, 650, x, 730)
+        for y in (650, 690, 730): doc.line(72, y, 330, y)
+        doc.drawString(80, 705, "Name")
+        doc.drawString(210, 705, "Amount")
+        doc.drawString(80, 665, "Apple")
+        doc.drawString(210, 665, "=1+2")
+        doc.save()
+        output = os.path.join(self.out, "tables.xlsx")
+        pdf_tools.pdf_tables_to_xlsx(path, output)
+        sheet = load_workbook(output, data_only=False).active
+        self.assertEqual(sheet['A2'].value, 'Apple')
+        self.assertEqual(sheet['B2'].value, '=1+2')
+        self.assertEqual(sheet['B2'].data_type, 's')
+
+    def test_image_export_zip_does_not_delete_existing_files(self):
+        path = os.path.join(self.out, "a-01.png")
+        with open(path, 'wb') as f: f.write(b'keep')
+        archive = pdf_tools.pdf_to_images_zip(self.pdf, self.out, dpi=72)
+        self.assertTrue(os.path.isfile(archive))
+        with open(path, 'rb') as f: self.assertEqual(f.read(), b'keep')
 
     def test_zip(self):
         out = engines.zip_files([self.pdf], os.path.join(self.out, "pack.zip"))

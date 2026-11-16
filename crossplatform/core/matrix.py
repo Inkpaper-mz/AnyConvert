@@ -122,13 +122,13 @@ class ConversionMatrix:
         if target_ext == "zip":
             return "zip"
         if target_ext == "pdf":
-            return "pymupdf" if source_ext in image_exts else "libreoffice"
+            return "pdf" if source_ext in image_exts else "libreoffice"
         if target_ext in ("png", "jpg", "jpeg") and source_ext == "pdf":
-            return "pymupdf"
+            return "pdf"
         if target_ext == "txt" and source_ext == "pdf":
-            return "pymupdf"
+            return "pdf"
         if target_ext == "html" and source_ext == "pdf":
-            return "pymupdf"
+            return "pdf"
         if target_ext == "txt" and source_ext in image_exts:
             return "tesseract"
 

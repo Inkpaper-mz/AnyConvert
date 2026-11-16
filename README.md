@@ -1,4 +1,6 @@
-# 万能转码 · AnyConvert 1.5.3
+# 万能转码 · AnyConvert
+
+> 当前优先维护 macOS 原生版。Windows、Linux 和 Web 发行暂缓；历史安装包的依赖与分发条件尚未完成审计。
 
 全平台离线格式转换器：**三平台统一本地 Web UI**（macOS 另提供原生版）。
 43 种目标格式（文档 / 图片 / 音频 / 视频），支持按目标体积压缩；
@@ -20,9 +22,9 @@ python3 scripts/install_context_menu.py uninstall
 
 转换结果输出到源文件所在目录；失败时查看仓库根目录 `service.log`。
 
-## 跨平台 Web 版（推荐）
+## 跨平台 Web 源码（暂停发行）
 
-用本地 Web UI 取代 Qt 界面：样式完全可控、三大平台一致、无需安装客户端。
+这部分源码暂不作为当前发布目标；依赖变更后尚未完成各平台安装包验证。
 
 ```bash
 python3 -m webui.server          # 自动打开浏览器（仅监听 127.0.0.1）
@@ -94,43 +96,13 @@ PDF 合并/拆分/转图片/表格转 Excel/图片转 PDF/ZIP 打包、引擎状
 
 - 图片 → 图片：保留比例，可用「分辨率 / 自定义宽高」缩放，透明通道在 PNG / WebP / TIFF 间保留。
 - 视频 → 图片：**截取第一帧**（例如 MP4 → JPG 生成封面图）。
-- 图片 → 视频：出于格式语义，仅允许输出 GIF（单帧动图）；其他视频格式会提示「图片只能转换为图片格式或 GIF」。
+- 图片 → 视频：支持 GIF、MP4 和 WebM；静态图片转 MP4／WebM 当前为 5 秒。
 
-## 下载（v1.5.3）
+## 发布与安装
 
-| 平台 | 文件 | 说明 |
-| --- | --- | --- |
-| macOS（推荐，Web UI） | [AnyConvert-1.5.3-macOS-web.zip](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.3/AnyConvert-1.5.3-macOS-web.zip) | 解压双击 .app，首次运行安装脚本 |
-| Windows | [AnyConvert-1.5.3-Windows-x64-Setup.exe](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.3/AnyConvert-1.5.3-Windows-x64-Setup.exe) | **exe 安装包**，内置 Python/FFmpeg；首次运行可一键下载 LibreOffice |
-| Linux | [AnyConvert-1.5.3-Linux-x64.tar.gz](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.3/AnyConvert-1.5.3-Linux-x64.tar.gz) | Python 3.10+，`bash install.sh` |
-| macOS 原生版（可选） | [AnyConvert-1.5.3-macOS-universal.dmg](https://github.com/Inkpaper-mz/AnyConvert/releases/download/v1.5.3/AnyConvert-1.5.3-macOS-universal.dmg) | SwiftUI 原生界面；首次运行可一键下载 LibreOffice（清华镜像） |
+当前优先维护 macOS 原生版。新发行包尚未发布：FFmpeg 构建的对应源码和第三方许可材料仍需核实。历史 Release 尚未完成依赖与分发审计，不作为当前推荐下载。
 
-发布页：<https://github.com/Inkpaper-mz/AnyConvert/releases/tag/v1.5.3>
-
-## 安装
-
-### macOS（Web UI，推荐）
-
-1. 解压 `AnyConvert-1.5.3-macOS-web.zip`；
-2. 双击包内 **安装依赖.command**（首次，安装 PyMuPDF 并下载 LibreOffice）；
-3. 双击 **万能转码.app**，浏览器自动打开本地界面；
-4. 首次被系统拦截时：右键 .app → 打开。
-
-### Windows
-
-1. 双击 `AnyConvert-1.5.3-Windows-x64-Setup.exe`，按向导安装；
-2. 从开始菜单 / 桌面启动「万能转码」；
-3. 文档转换需另装 LibreOffice；PDF / 图片 / 音视频开箱即用。
-
-### Linux
-
-1. 解压 `AnyConvert-1.5.3-Linux-x64.tar.gz`；
-2. 安装 Python 3.10+，执行 `bash install.sh`；
-3. `bash 启动-Linux.sh` 启动。
-
-### macOS 原生版（可选）
-
-打开 DMG 把 **万能转码.app** 拖进「应用程序」。仅覆盖音视频与图片转换。
+macOS 本地测试版可将 `.app` 拖入“应用程序”；临时签名的测试包尚未经过 Apple 公证。Windows、Linux 与 Web 发行暂缓。
 
 ## 使用
 
